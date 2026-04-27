@@ -9,8 +9,8 @@
   },
   "plugins": [
     {
-      "name": "fmk-docs",
-      "source": "./plugins/fmk-docs",
+      "name": "docs",
+      "source": "./plugins/docs",
       "description": "C4-model documentation tracker with SHA propagation and staleness detection",
       "version": "1.0.0",
       "category": "documentation",
