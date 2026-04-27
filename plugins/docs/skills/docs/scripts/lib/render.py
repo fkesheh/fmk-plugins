@@ -49,7 +49,7 @@ def stale_text(entries: list[StaleEntry], no_color: bool = False) -> str:
             head = _c("drift", _YELLOW, on)
             lines.append(
                 f"  - [{e.ref_kind}] {head}: {e.ref_path}\n"
-                f"      was {e.sha_recorded[:12]}  now {(e.sha_current or '')[:12]}"
+                f"      was {e.sha_recorded}  now {e.sha_current or ''}"
             )
     lines.append("")
     return "\n".join(lines)
