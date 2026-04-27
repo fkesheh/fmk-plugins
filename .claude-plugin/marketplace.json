@@ -23,6 +23,14 @@
       "version": "1.0.0",
       "category": "documentation",
       "tags": ["research", "docs", "codebase", "audit", "staleness"]
+    },
+    {
+      "name": "pr-review",
+      "source": "./plugins/pr-review",
+      "description": "Analyze and address pull request review comments. Fetches unresolved threads via GitHub GraphQL, evaluates each comment against real code, makes changes or drafts responses.",
+      "version": "1.0.0",
+      "category": "code-review",
+      "tags": ["pr", "review", "comments", "github", "graphql"]
     }
   ]
 }

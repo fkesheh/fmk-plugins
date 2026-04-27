@@ -1,0 +1,9 @@
+{
+  "name": "pr-review",
+  "description": "Analyze and address pull request review comments using GitHub GraphQL/REST APIs",
+  "version": "1.0.0",
+  "author": {
+    "name": "Foad Kesheh",
+    "email": "foad@fmktech.com.br"
+  }
+}
