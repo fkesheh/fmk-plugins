@@ -1,0 +1,10 @@
+{
+  "name": "research",
+  "description": "Codebase research with SHA-tracked, line-referenced docs at docs/research/. Parallel sub-agent investigation. Detects existing research on same topic and updates instead of duplicating. Detects staleness. Companion to the docs plugin.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Foad Kesheh",
+    "email": "foad@fmktech.com.br"
+  },
+  "keywords": ["research", "docs", "codebase", "audit", "c4", "staleness"]
+}

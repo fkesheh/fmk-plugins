@@ -15,6 +15,14 @@
       "version": "1.0.0",
       "category": "documentation",
       "tags": ["docs", "c4", "staleness", "drift"]
+    },
+    {
+      "name": "research",
+      "source": "./plugins/research",
+      "description": "On-demand codebase research. Parallel sub-agents produce SHA-tracked, line-referenced docs at docs/research/. Detects existing research on the same topic and updates instead of duplicating. Companion to docs.",
+      "version": "1.0.0",
+      "category": "documentation",
+      "tags": ["research", "docs", "codebase", "audit", "staleness"]
     }
   ]
 }
