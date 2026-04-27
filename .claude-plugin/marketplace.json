@@ -31,6 +31,14 @@
       "version": "1.0.0",
       "category": "code-review",
       "tags": ["pr", "review", "comments", "github", "graphql"]
+    },
+    {
+      "name": "plan",
+      "source": "./plugins/plan",
+      "description": "Research-backed implementation planning. Surveys existing research docs, spawns parallel agents to fill knowledge gaps, produces phased plans at docs/plans/ with SHA-tracked references.",
+      "version": "1.0.0",
+      "category": "documentation",
+      "tags": ["plan", "implementation", "research", "docs"]
     }
   ]
 }

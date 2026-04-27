@@ -1,0 +1,9 @@
+{
+  "name": "plan",
+  "description": "Research-backed implementation planning. Surveys existing research, spawns parallel agents to fill knowledge gaps, produces phased plans at docs/plans/ with SHA-tracked references.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Foad Kesheh",
+    "email": "foad@fmktech.com.br"
+  }
+}
