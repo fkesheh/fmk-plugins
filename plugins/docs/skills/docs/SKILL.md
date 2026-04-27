@@ -1,5 +1,5 @@
 ---
-name: fmk-docs
+name: docs
 description: Manage C4-model documentation hierarchies with SHA-tracked source-file references and bottom-up staleness propagation. Use this skill whenever the user wants to audit doc/code drift, find stale documentation, sync docs after a refactor, scaffold a docs tree with init, check doc coverage, find orphan source files (code that no doc references), add a new code-level doc, regenerate aggregator overviews from leaves, or wire a pre-commit/CI doc-staleness gate. TRIGGER on phrases like "are docs stale", "doc coverage", "docs drifted", "init docs", "C4 docs", "fmk docs", "doc audit", "which docs need updating", "regenerate the container overview", "find uncovered files", "fmk-docs check", "fmk-docs orphans", or any mention of `docs/.fmk-docs.yml`. SKIP for prose-only docs with no source-file linkage, generated API reference docs (typedoc/sphinx), or single-file READMEs that don't follow C4 hierarchy.
 license: Complete terms in LICENSE.txt
 ---
