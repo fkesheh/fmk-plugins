@@ -1,0 +1,29 @@
+---
+type: aggregator
+id: {{id}}
+title: "{{title}}"
+level: 2
+parent: ../../01-context/README.md
+status: fresh
+last_synced: {{date}}
+sha_method: git-blob-sha1
+references: []
+---
+
+# Container: {{title}}
+
+## Responsibility
+
+What this container does within the system.
+
+## Technology
+
+Languages, frameworks, runtimes used.
+
+## Components
+
+This container is composed of the following components. Each has its own overview at `03-components/<name>/README.md`. Mirror these in the `references[]` list above as `kind: child` entries.
+
+## External dependencies
+
+Databases, queues, third-party services this container talks to.

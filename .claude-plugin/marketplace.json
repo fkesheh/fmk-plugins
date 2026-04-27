@@ -1,0 +1,20 @@
+{
+  "name": "fmk-plugins",
+  "owner": {
+    "name": "Foad Kesheh",
+    "email": "foad@fmktech.com.br"
+  },
+  "metadata": {
+    "description": "FMK plugin marketplace"
+  },
+  "plugins": [
+    {
+      "name": "fmk-docs",
+      "source": "./plugins/fmk-docs",
+      "description": "C4-model documentation tracker with SHA propagation and staleness detection",
+      "version": "1.0.0",
+      "category": "documentation",
+      "tags": ["docs", "c4", "staleness", "drift"]
+    }
+  ]
+}

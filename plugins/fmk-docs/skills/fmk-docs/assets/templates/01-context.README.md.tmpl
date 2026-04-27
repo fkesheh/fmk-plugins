@@ -1,0 +1,33 @@
+---
+type: aggregator
+id: {{id}}
+title: "{{title}}"
+level: 1
+parent: null
+status: fresh
+last_synced: {{date}}
+sha_method: git-blob-sha1
+references: []
+---
+
+# {{title}}
+
+System context overview. This is the highest-level document — the whole-system view.
+
+## Purpose
+
+Describe what this system does, who uses it, and what external systems it talks to.
+
+## Containers
+
+This system is composed of the following containers (deployable units). Each container has its own overview at `02-containers/<name>/README.md`.
+
+<!-- After init, list containers here. The `references[]` list above must mirror these as `kind: child` entries pointing to each container's README.md. -->
+
+## External systems
+
+<!-- Other services, third parties, identity providers, external data sources. -->
+
+## Users / actors
+
+<!-- Personas, roles, integration partners. -->

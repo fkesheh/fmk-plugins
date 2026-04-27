@@ -1,0 +1,9 @@
+{
+  "name": "fmk-docs",
+  "description": "C4-model documentation tracker with SHA propagation and staleness detection",
+  "version": "1.0.0",
+  "author": {
+    "name": "Foad Kesheh",
+    "email": "foad@fmktech.com.br"
+  }
+}

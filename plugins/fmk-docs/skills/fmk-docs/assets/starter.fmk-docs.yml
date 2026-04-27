@@ -1,0 +1,38 @@
+version: 1
+docs_root: docs
+
+levels:
+  context: 01-context
+  containers: 02-containers
+  components: 03-components
+  code: 04-code
+
+sha:
+  method: git-hash-object
+  algorithm: sha1
+
+include:
+  - "src/**/*"
+  - "lib/**/*"
+
+ignore:
+  - "**/*.test.*"
+  - "**/*.spec.*"
+  - "**/__generated__/**"
+  - "**/__pycache__/**"
+  - "**/node_modules/**"
+  - "**/dist/**"
+  - "**/build/**"
+  - "**/target/**"
+  - "**/.next/**"
+  - "**/.turbo/**"
+
+coverage_roles:
+  - primary
+
+strictness:
+  fail_on_missing_source: true
+  fail_on_orphan: false
+
+group_by: dir
+recurse_submodules: false
