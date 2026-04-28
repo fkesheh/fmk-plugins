@@ -39,6 +39,14 @@
       "version": "1.0.0",
       "category": "documentation",
       "tags": ["plan", "implementation", "research", "docs"]
+    },
+    {
+      "name": "debug",
+      "source": "./plugins/debug",
+      "description": "Proof-based bug investigation. Forces explicit hypotheses, evidence-based verification, 5 Whys root cause analysis, and falsification check, with a written investigation log at docs/investigations/ before any code change is permitted.",
+      "version": "1.0.0",
+      "category": "debugging",
+      "tags": ["debug", "bug", "root-cause", "hypothesis", "5-whys", "falsification", "investigation"]
     }
   ]
 }

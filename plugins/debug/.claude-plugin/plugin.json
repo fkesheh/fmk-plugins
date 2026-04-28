@@ -1,0 +1,10 @@
+{
+  "name": "debug",
+  "description": "Proof-based bug investigation. Forces explicit hypothesis formation, evidence-based verification, 5 Whys root cause analysis, and falsification check, with a written investigation log at docs/investigations/ before any code change is permitted.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Foad Kesheh",
+    "email": "foad@fmktech.com.br"
+  },
+  "keywords": ["debug", "bug", "investigation", "root-cause", "5-whys", "hypothesis", "falsification"]
+}
