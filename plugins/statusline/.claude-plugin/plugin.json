@@ -1,0 +1,10 @@
+{
+  "name": "statusline",
+  "description": "Install an opinionated Claude Code statusLine into ~/.claude/settings.json. Layout: <folder>  <model>  effort: <level>  ctx: <human-tokens> / <pct>%. Conditional segments, 1M / 200K context window fallback by model name, non-destructive merge, JSON validation, and dry-run smoke test before declaring done.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Foad Kesheh",
+    "email": "foad@fmktech.com.br"
+  },
+  "keywords": ["statusline", "status-line", "settings", "claude-code", "config", "opinionated"]
+}

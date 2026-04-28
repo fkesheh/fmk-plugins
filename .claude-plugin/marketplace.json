@@ -47,6 +47,14 @@
       "version": "1.0.0",
       "category": "debugging",
       "tags": ["debug", "bug", "root-cause", "hypothesis", "5-whys", "falsification", "investigation"]
+    },
+    {
+      "name": "statusline",
+      "source": "./plugins/statusline",
+      "description": "Install an opinionated Claude Code statusLine into ~/.claude/settings.json. Layout: <folder>  <model>  effort: <level>  ctx: <human-tokens> / <pct>%. Conditional segments, 1M / 200K context window fallback by model name, non-destructive merge, JSON validation, and dry-run smoke test.",
+      "version": "1.0.0",
+      "category": "configuration",
+      "tags": ["statusline", "settings", "claude-code", "config", "opinionated"]
     }
   ]
 }
