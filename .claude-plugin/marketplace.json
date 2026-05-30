@@ -35,7 +35,7 @@
     {
       "name": "plan",
       "source": "./plugins/plan",
-      "description": "Research-backed implementation planning. Surveys existing research docs, spawns parallel agents to fill knowledge gaps, produces phased plans at docs/plans/ with SHA-tracked references.",
+      "description": "Research-backed implementation planning with a mandatory clarification dialog. Every open question (undefined terms, ambiguities, scope edges) must be resolved by user Q&A or codebase research before any plan body is written. Produces phased plans at docs/plans/ with SHA-tracked references and an embedded resolved-questions audit table.",
       "version": "1.0.0",
       "category": "documentation",
       "tags": ["plan", "implementation", "research", "docs"]

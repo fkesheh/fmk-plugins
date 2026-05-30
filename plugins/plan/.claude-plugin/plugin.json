@@ -1,6 +1,6 @@
 {
   "name": "plan",
-  "description": "Research-backed implementation planning. Surveys existing research, spawns parallel agents to fill knowledge gaps, produces phased plans at docs/plans/ with SHA-tracked references.",
+  "description": "Research-backed implementation planning with a mandatory clarification dialog. Every open question — undefined terms, ambiguities, missing constraints, scope edges — must be resolved by user Q&A or codebase / external research before any plan body is written. Produces phased plans at docs/plans/ with SHA-tracked references and an embedded Open Questions Resolved audit table.",
   "version": "1.0.0",
   "author": {
     "name": "Foad Kesheh",
