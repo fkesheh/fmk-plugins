@@ -59,10 +59,10 @@
     {
       "name": "tdd-wf",
       "source": "./plugins/tdd-wf",
-      "description": "Test-driven feature-build workflow for an unfamiliar codebase: map it into a navigable wiki, cut the task into vertical walking-skeleton slices (each E2E-testable), drive every slice through /red → /green → /refactor with outside-in TDD, shift-left gating, and atomic feature-scoped commits, then /presubmit (full real gate + parallel multi-agent grading panel). Stack-agnostic.",
+      "description": "Test-driven feature-build workflow for an unfamiliar codebase: map it into a navigable wiki and a C4 architecture model, cut the task into vertical walking-skeleton slices (each E2E-testable), drive every slice through /red → /green → /refactor with outside-in TDD, shift-left gating, and atomic feature-scoped commits, then /presubmit (full real gate + parallel multi-agent grading panel). Stack-agnostic.",
       "version": "1.0.0",
       "category": "workflow",
-      "tags": ["tdd", "workflow", "red-green-refactor", "walking-skeleton", "vertical-slice", "wiki", "presubmit", "grading", "e2e"]
+      "tags": ["tdd", "workflow", "red-green-refactor", "walking-skeleton", "vertical-slice", "wiki", "c4", "structurizr", "presubmit", "grading", "e2e"]
     }
   ]
 }
