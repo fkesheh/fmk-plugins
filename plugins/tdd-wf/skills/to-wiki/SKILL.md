@@ -5,8 +5,10 @@ description: >-
   parallel subagents. Built for the start of a live coding assessment on an UNKNOWN
   monorepo: discovers the stack, workspaces, conventions, server-communication style,
   testing setup, scope boundaries, and traces one reference feature end-to-end — so you
-  can read the repo fluently and mirror its patterns. Use at the very start, or whenever
-  you are dropped into a strange repo and need a map before writing code. Trigger: /to-wiki.
+  can read the repo fluently and mirror its patterns. Pages carry YAML frontmatter with a
+  per-source SHA1 freshness signal (detect + refresh stale pages after the code changes).
+  Use at the very start, or whenever you are dropped into a strange repo and need a map
+  before writing code. Trigger: /to-wiki.
 ---
 
 # /to-wiki — codebase → navigable wiki
@@ -138,34 +140,62 @@ these files" checklist.
   to write; and the page template below.
 - Be **read-only** on the target repo. Cite `/abs/path:line` for every claim; mark anything
   unconfirmed `⚠ unverified`. No invented APIs.
-- Write your page, then **return a short summary**: `{ title, page_path, one_liner,
-  key_links: [...], open_questions: [...] }` so the orchestrator can build the index.
+- **Capture a content hash for every source file you cite**: run `git hash-object <file>` (or
+  `shasum`/`sha1sum` if not git-tracked) and record `{path, sha}` in the page's frontmatter
+  `sources`. This is the freshness signal — cheap, and you already have the file open.
+- Write your page (frontmatter first), then **return a short summary**: `{ title, page_path,
+  one_liner, key_links: [...], sources: [{path, sha}], open_questions: [...] }` so the orchestrator
+  can build the index and a repo-wide source→page map.
 
 ## Phase 2 — Synthesize the wiki
 
 After agents return, **you** write the connective tissue:
 
-- **`HOME.md`** (the entry point) — open it after building. Contains:
+- **`HOME.md`** (the entry point, also has frontmatter `type: index`) — open it after building:
   - One-paragraph "what is this repo" + the detected stack (named, with confidence).
   - A **command cheatsheet** (install/dev/build/test/lint/typecheck) copied from real scripts.
   - A prominent **SCOPE banner**: editable vs off-limits paths and any required test gate.
   - A **map**: links to every workspace page and every dimension page, grouped.
   - A **"Start here for the task"** pointer to the traced-feature page.
+  - A **`generated:` date** + a one-line "freshness: re-run the staleness check after editing code"
+    note (see Freshness & refresh).
 - **`open-questions.md`** — aggregate every `open_question` / `⚠ unverified` from the agents,
   so you know what to confirm before relying on it.
 - **Cross-link** pages with relative Markdown links so the wiki is navigable from `HOME.md`.
 
-## Phase 3 — Verify & hand off
+## Phase 3 — Verify, lint & hand off
 
-- Quick coherence pass: no dead links; every dimension that exists has a page; commands in the
-  cheatsheet actually appear in the manifests; scope banner matches the brief verbatim.
-- Print the absolute path to `HOME.md` and a 3–5 line orientation so the user can dive in.
+A quick **lint pass** (borrowed from the LLM-wiki idea — adapted to a code map):
+- **Dead links** — every relative `./*.md` resolves.
+- **Coverage** — every dimension that exists has a page; commands in the cheatsheet really appear
+  in the manifests; the scope banner matches the brief verbatim.
+- **Orphans / missing cross-refs** — no page is unreachable from `HOME.md`; obviously-related pages
+  link each other.
+- **Staleness baseline** — confirm each page's `sources[].sha` matches the file's current
+  `git hash-object` (they should, fresh off generation) so the freshness check has a clean start.
+
+Then print the absolute path to `HOME.md` and a 3–5 line orientation so the user can dive in.
 
 ---
 
 ## Page template (every wiki page)
 
+Every page **starts with YAML frontmatter**, then the body. The frontmatter makes pages
+tool-queryable and — via `sources[].sha` — gives a **staleness signal** (see Freshness & refresh):
+
 ```markdown
+---
+title: <Title>
+type: workspace | dimension | traced-feature | index
+generated: <YYYY-MM-DD>            # today's real date
+sources:                           # EVERY source file this page cites, with its content hash
+  - path: /abs/path/file.ext
+    sha: <git hash-object output>  # sha1 of the file's current content
+  - path: /abs/path/other.ext
+    sha: <git hash-object output>
+links: [./related-page.md, ./another.md]   # the pages this one cross-links
+---
+
 # <Title>
 
 > **TL;DR:** one or two sentences a tired reader can act on.
@@ -185,6 +215,51 @@ After agents return, **you** write the connective tissue:
 ## See also
 - [<related page>](./related.md)
 ```
+
+## Freshness & refresh (the staleness signal)
+
+Unlike Karpathy's LLM-wiki, our "raw source" is the **live codebase — it mutates as you build
+slices.** A page citing `page.tsx:42` goes stale the moment you edit that file. The `sources[].sha`
+frontmatter is what makes drift detectable.
+
+**Check staleness** (run anytime, especially after `/green`/`/refactor`): for each page, re-hash its
+`sources` and compare to the recorded `sha`:
+
+```sh
+# flags pages whose cited files changed since the wiki was generated
+for f in docs/wiki/*.md; do
+  awk '/^sources:/{s=1;next} /^[a-z]+:/{s=0} s&&/path:/{p=$2} s&&/sha:/{print p, $2}' "$f" \
+  | while read path sha; do
+      [ -f "$path" ] && cur=$(git hash-object "$path" 2>/dev/null || shasum "$path" | cut -d' ' -f1)
+      [ "$cur" != "$sha" ] && echo "STALE: $f  ←  $path"
+    done
+done
+```
+
+*(The script is an optional convenience — the real check is "re-hash the sources, compare." Adapt
+to the repo's hashing.)*
+
+**Refresh** = re-run `/to-wiki` targeting **only the stale pages**: regenerate each flagged page
+(same per-page contract), which rewrites its body *and* its `sources[].sha`. This is the one
+Karpathy idea that genuinely fits — *keep the map current* — because the code changes underneath it.
+Cheap, surgical, and it keeps the wiki trustworthy across the build loop instead of decaying into
+lies after the first edit.
+
+## Viewing the wiki
+
+It's plain markdown in a folder, so view it however's quickest:
+- **Editor preview** — open `docs/wiki/HOME.md` in VS Code's Markdown preview; relative links and
+  `file:line` citations are clickable.
+- **Obsidian (browser-like app, with graph + editing)** — point an Obsidian vault at `docs/wiki/`.
+  You get rendered pages, the **graph view** (spot orphan/hub pages at a glance), the frontmatter as
+  metadata, and full editing. This is the closest to "open in a browser and edit," with zero build.
+- **Optional local static view** — serve the folder (e.g. `python3 -m http.server` in `docs/wiki/`)
+  for raw browsing, or render with any markdown tool you have. Keep it optional; the markdown is the
+  source of truth, not any viewer.
+
+> Note on editing: the wiki is a **generated** artifact — hand-edits are lost on the next
+> `/to-wiki` refresh. Edit freely to scratch-think, but treat regeneration as authoritative; put
+> durable notes in `open-questions.md` or the repo, not in a page that will be rewritten.
 
 ## Quality bar
 
