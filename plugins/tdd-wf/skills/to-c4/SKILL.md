@@ -16,7 +16,12 @@ Produce a layered **C4** view of the system so anyone can understand the archite
 - **L2 Container** — the **runnable/deployable units** (apps, services, SPAs, databases, brokers,
   workers) and the relationships + protocols between them. *This is the most valuable level.*
 - **L3 Component** — inside the **focus container** (the one you'll work in), the major
-  components/modules/layers and how they relate.
+  components/modules/layers and how they relate. **Keep L3 faithful — don't collapse distinct
+  concerns into one box.** If the framework draws a real boundary (e.g. server vs client
+  components, a typed-RPC/contract layer like a generated client, the data/server-fn layer vs the
+  mutation/action layer), model each as its own component. L3 is where the architectural nuance
+  lives; a flattened "everything UI" box throws away the value of the level. (You may also give a
+  second important container its own component view if it carries real internal structure.)
 - **L4 Code** — **skipped by default** (use the IDE; C4 treats it as optional/auto-generated).
 
 The output is **Structurizr DSL** (`workspace.dsl`) — text, diffable, version-controllable — plus a
@@ -26,12 +31,22 @@ helper to validate/view/export.
 
 1. **Stack-agnostic.** C4 is architecture-level; it maps to any language/framework. Discover the
    containers from the repo — don't assume.
-2. **Don't over-model.** Containers = separately **runnable/deployable** things. A shared library
-   or package is **not** a container — it's a component of the container that uses it (or omit it at
-   container level). Keep L1/L2 to a readable handful of boxes.
+2. **Don't over-model — two traps to avoid (both are common LLM C4 errors):**
+   - A shared library/package is **not** a container — it's a component of the container that uses
+     it (or omit it). Keep L1/L2 to a readable handful of boxes.
+   - An **in-process datastore is not a container.** A module-level array / in-memory map / global
+     cache lives *inside* the process that owns it — represent it in that container's description,
+     never as its own container (a container must be separately runnable/deployable).
+   - A **build-time dependency is not a runtime external system.** Assets inlined at build (bundled
+     fonts, vendored libs) don't create a runtime relationship between deployed containers — don't
+     model them in the system-context view. Only model external systems the running app actually
+     talks to.
 3. **Ground every element.** Each person/container/component/relationship comes from real evidence
    (a manifest, an entrypoint, a server-comms call site). Reuse the wiki's citations where possible.
-4. **Validate before declaring done.** The DSL must pass `c4.sh validate`.
+4. **Validate with the CLI before declaring done — mandatory, not a visual self-check.** The DSL
+   must pass `c4.sh validate` (the real Structurizr CLI). An eyeball pass misses real syntax errors
+   the parser catches (e.g. style properties need to be newline-separated, not `;`-joined on one
+   line). If Docker is truly unavailable, say so explicitly and flag the DSL as *unvalidated*.
 
 ## Inputs
 

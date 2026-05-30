@@ -140,9 +140,11 @@ these files" checklist.
   to write; and the page template below.
 - Be **read-only** on the target repo. Cite `/abs/path:line` for every claim; mark anything
   unconfirmed `⚠ unverified`. No invented APIs.
-- **Capture a content hash for every source file you cite**: run `git hash-object <file>` (or
-  `shasum`/`sha1sum` if not git-tracked) and record `{path, sha}` in the page's frontmatter
-  `sources`. This is the freshness signal — cheap, and you already have the file open.
+- **Capture a content hash for every source file you cite**: **actually run** `git hash-object
+  <file>` (or `shasum`/`sha1sum` if not git-tracked) and record `{path, sha}` in the page's
+  frontmatter `sources`. **Never write a sha you didn't compute** — a guessed/fabricated hash
+  silently breaks the freshness signal (and is caught by the Phase-3 gate). Cheap; you have the
+  file open already.
 - Write your page (frontmatter first), then **return a short summary**: `{ title, page_path,
   one_liner, key_links: [...], sources: [{path, sha}], open_questions: [...] }` so the orchestrator
   can build the index and a repo-wide source→page map.
@@ -171,8 +173,12 @@ A quick **lint pass** (borrowed from the LLM-wiki idea — adapted to a code map
   in the manifests; the scope banner matches the brief verbatim.
 - **Orphans / missing cross-refs** — no page is unreachable from `HOME.md`; obviously-related pages
   link each other.
-- **Staleness baseline** — confirm each page's `sources[].sha` matches the file's current
-  `git hash-object` (they should, fresh off generation) so the freshness check has a clean start.
+- **SHA verification — MANDATORY gate, not advisory.** Re-run `git hash-object` on the `sources`
+  of every page (or a solid sample per page) and confirm each matches the `sha` written in
+  frontmatter. They MUST match fresh off generation — a mismatch means an agent **wrote a SHA it
+  didn't actually compute** (a real failure mode: fabricated/guessed hashes silently break the
+  freshness signal). Any mismatch ⇒ recompute and rewrite that page's `sources` before hand-off.
+  Do not hand off a wiki with unverified SHAs.
 
 Then print the absolute path to `HOME.md` and a 3–5 line orientation so the user can dive in.
 
