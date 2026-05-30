@@ -1,0 +1,10 @@
+{
+  "name": "tdd-wf",
+  "description": "Test-driven feature-build workflow for an unfamiliar codebase: map the repo into a navigable wiki (/to-wiki), cut the task into vertical walking-skeleton slices each E2E-testable (/to-slices), then drive every slice through /red → /green → /refactor with outside-in TDD, shift-left gating, and atomic feature-scoped commits, and finish with /presubmit (full real gate + a parallel multi-agent grading panel). Stack-agnostic; discovers conventions at runtime.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Foad Kesheh",
+    "email": "foad@fmktech.com.br"
+  },
+  "keywords": ["tdd", "workflow", "red-green-refactor", "walking-skeleton", "vertical-slice", "codebase-map", "wiki", "presubmit", "grading", "e2e", "monorepo"]
+}
