@@ -1,0 +1,10 @@
+{
+  "name": "contract-first-prep",
+  "description": "Prepare a greenfield codebase for fast, parallel, multi-agent implementation by writing an immutable contract FIRST. Probes the stack, scaffolds with a strict typecheck gate, writes the single-source-of-truth type/interface contract (incl. a wiring 'context' interface + event contract), a pure-data config file, and shared helpers, then decomposes the system into non-overlapping module file-groups with one named integrator and per-module specs — stopping at a verified blueprint a Workflow or parallel agents can build. Stack-agnostic (TypeScript/Python/Rust/Go/Java variants); ships a check_plan.py validator that proves the decomposition is disjoint and total.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Foad Kesheh",
+    "email": "foad@fmktech.com.br"
+  },
+  "keywords": ["contract-first", "scaffolding", "decomposition", "parallel", "multi-agent", "blueprint", "greenfield", "architecture", "fan-out", "workflow"]
+}
