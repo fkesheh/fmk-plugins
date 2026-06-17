@@ -173,3 +173,5 @@ The screenshot judge clears the bar on every axis · shadows + day/night + atmos
 present in the product · all colors trace to the shared palette · the world reads as
 populated and art-directed at gameplay distance AND charming in close-up.
 ═══════════════════════════════════════════════════════════════════════════
+
+ultracode ultrathink
