@@ -1,0 +1,10 @@
+{
+  "name": "single-shot-game-generation",
+  "description": "End-to-end generator for a complete, playable, visually beautiful game built in ONE orchestrated multi-agent workflow. The orchestrator writes an immutable contract + an art-direction style bible, fans the build out across parallel sonnet implementers (with dedicated world/structure/character/fx/lighting art agents), runs a review → adversarial-verify → fix gauntlet, then actually runs the game, captures screenshots, and iterates against an art-director judge until it looks great. Stack-agnostic; browser/canvas games are the sweet spot. Companion to contract-first-prep (which stops at the blueprint).",
+  "version": "1.0.0",
+  "author": {
+    "name": "Foad Kesheh",
+    "email": "foad@fmktech.com.br"
+  },
+  "keywords": ["game", "game-generation", "single-shot", "contract-first", "multi-agent", "workflow", "three.js", "art-direction", "visual", "screenshot-judge", "low-poly", "verified-build"]
+}
