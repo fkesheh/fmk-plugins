@@ -53,12 +53,13 @@ const SHOTS = [
 const VISUAL_BAR = 8       // each rubric axis must reach this
 const MAX_JUDGE_ROUNDS = 3 // bound the screenshot-judge loop
 
-// >>> SLOT: models — choose per the skill's model policy. Do NOT hardcode a brand/version: pick the
-// most cost-efficient model that does each step well, and ASK THE USER which tiers to use if unsure.
-// This build fans out to dozens of calls, so model choice dominates cost.
-const M_BUILD = 'REPLACE_WITH_A_COST_EFFICIENT_CODING_MODEL' // implementers, reviewers, verifiers, fixers, judges, gate, run
-const M_MECH  = 'REPLACE_WITH_THE_CHEAPEST_FAST_MODEL'       // mechanical structured-output steps (parse checker output to JSON)
-// (The orchestrator — i.e. whoever runs this Workflow — uses its own strong reasoning model.)
+// Models — DEFINED CONCRETELY here because this script targets one runtime (the Claude Code Workflow
+// tool). The skill's methodology stays model-agnostic; the workflow is where you pin actual names.
+// Prefer the most cost-effective model that does each step well — this fans out to dozens of calls,
+// so model choice dominates cost. Running elsewhere? Swap these for your environment's tiers (e.g. a
+// single cost-effective coding model on Cursor). The orchestrator (whoever runs this) uses its own model.
+const M_BUILD = 'sonnet' // implementers, reviewers, verifiers, fixers, judges, gate, run (mid-tier coding)
+const M_MECH  = 'haiku'  // mechanical structured-output steps (parse checker output to JSON) — cheap+fast
 
 // >>> SLOT: rules prepended to every agent -----------------------------------
 const RULES = [

@@ -46,15 +46,20 @@ off). Here you run the whole thing.
 - One orchestrated Workflow. Implementers never make design decisions — they fill bodies against a
   frozen contract.
 
-### Model policy — match the model to the task; prefer the cheaper option; don't hardcode
+### Model policy — a nudge, not a lineup
 
-A multi-agent build fans out to dozens of calls, so model choice dominates cost. Don't pin a specific
-model by name (model lineups and prices change). Instead choose **per task complexity**, set the model
-explicitly on **every** subagent call, and **default to the most cost-efficient model that can do the
-step well** — escalate to a stronger model only where the work is genuinely hard:
+This methodology is **model-agnostic on purpose**: it names no specific model, because your runtime
+decides what's available (a Cursor user reaches for a cost-effective coding model; a Claude user has a
+mid-tier and a cheap-fast tier; a Codex user has neither of those). So treat the below as a nudge, and
+**pin the actual model names in the concrete workflow script you generate**, not here — that script
+targets one runtime, so it's the right place to name models (see the template's `M_BUILD` / `M_MECH`).
+Set the model explicitly on every subagent call there.
 
-- **Orchestrator (you):** a strong reasoning model — you're doing the planning, contract, and art
-  direction.
+A multi-agent build fans out to dozens of calls, so model choice dominates cost. **Prefer the most
+cost-effective model that does each step well**, matching tier to difficulty:
+
+- **Orchestrator (you):** your strongest reasoning model — you're doing the planning, contract, and
+  art direction.
 - **Implementers / reviewers / verifiers / per-file fixers / judges:** a solid mid-tier coding model
   is usually enough; reserve a stronger tier for the hardest review/verify steps and drop to a cheaper
   one where a step is simple.
@@ -62,8 +67,8 @@ step well** — escalate to a stronger model only where the work is genuinely ha
   reliably returns valid JSON.
 
 If you don't know which models are available or how to weigh cost vs. quality for this run, **ask the
-user which tiers to use** rather than guessing — a quick question here can save a large bill. When the
-user has expressed a preference (or a budget), follow it.
+user** rather than guessing — a quick question here can save a large bill. Honor any budget/preference
+the user states.
 
 ## Process
 
