@@ -50,7 +50,8 @@ and scores conformance + execution).
 <a name="judge"></a>
 ## Judge prompt + output schema
 
-Spawn one **sonnet** judge per screenshot (pipeline them). Hand it the screenshot, the style bible,
+Spawn one judge subagent per screenshot (pipeline them); use a capable model per the skill's model
+policy. Hand it the screenshot, the style bible,
 and this rubric. Tell it to be a demanding art director and to return **file-targeted** fixes — vague
 fixes ("make it prettier") are useless; the next phase needs to know which module to edit.
 
@@ -98,9 +99,9 @@ acts on real problems.
 ## The fix loop and pass bar
 
 1. Capture the screenshot set.
-2. Judge every shot (parallel sonnet) → findings.
+2. Judge every shot (in parallel) → findings.
 3. Adversarially verify findings; keep the survivors.
-4. Group confirmed findings by file; one sonnet fixer per file (the fixer may edit any file except
+4. Group confirmed findings by file; one fixer per file (the fixer may edit any file except
    the immutable contract — palette/primitives stay frozen; if a color is wrong, the *usage* changes,
    not the palette).
 5. **Re-screenshot and re-judge.**

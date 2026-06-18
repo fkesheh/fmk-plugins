@@ -29,13 +29,18 @@ not a demo. Match the idea's ambition; cover its core flows end-to-end.
 
 ## Non-negotiable method
 You are the orchestrator/architect. YOU plan and write the contract. ALL implementation, review, and
-fixing is done by subagents pinned to `sonnet` (and `haiku` for cheap mechanical steps) — never `opus`,
-never you hand-writing modules. One orchestrated workflow. Implementers never make design decisions.
+fixing is done by subagents — never you hand-writing modules. One orchestrated workflow. Implementers
+never make design decisions.
 
-### Model assignment (set the model explicitly on every subagent call)
-- Orchestrator (planning, contract, integration): your own model
-- Implementers · fixers · reviewers · verifiers · per-file fixers · gate: **sonnet**
-- Mechanical structured-output steps (parsing tool output to JSON): **haiku**
+### Model policy (set the model explicitly on every subagent call; don't hardcode a brand/version)
+Pick per task complexity and prefer the most cost-efficient model that does each step well — this fans
+out to dozens of calls, so model choice dominates cost. If unsure which models are available or how to
+trade cost vs. quality, ASK THE USER which tiers to use (and honor any preference/budget they give).
+- Orchestrator (planning, contract, integration): your own strong reasoning model.
+- Implementers · fixers · reviewers · verifiers · per-file fixers · judges · gate: a solid mid-tier
+  coding model; escalate only for the hardest review/verify steps, drop to a cheaper one where easy.
+- Mechanical structured-output steps (parsing tool output to JSON): the cheapest fast model that
+  returns valid JSON.
 
 ## Step 0 — Read the idea and choose the stack
 Pick the simplest stack that fits. Decide the project's three real gates in that stack's terms: its
@@ -63,19 +68,19 @@ can verify real behavior.
 
 ## Step 3 — One Workflow: implement → gauntlet → gate
 Re-assert immutability of the contract files in EVERY phase.
-3a Implement (parallel · sonnet): N disjoint modules, no two agents share a file. Prompt = RULES +
+3a Implement (parallel): N disjoint modules, no two agents share a file. Prompt = RULES +
    CONTRACT + sealed file list + brief. Production quality, no stubs, edge cases.
-3b Static-fix loop (haiku reporter + sonnet per-file fixers · bounded): structured errors grouped by
+3b Static-fix loop (bounded; a cheap mechanical model parses errors, fixers repair per file): structured errors grouped by
    file. CARVE-OUT: minimal contract-conformant symbol/export add or rename in a NEIGHBOR's file ONLY
    for a missing/misnamed-symbol or broken-import error — NEVER a wholesale rewrite.
-3c Multi-lens review (~5 lenses · sonnet): pick lenses matching the idea's risk surface from —
+3c Multi-lens review (~5 lenses): pick lenses matching the idea's risk surface from —
    correctness/integration, state & data-flow, error-handling & edge-cases, interface wiring,
    security/input-validation, performance, + any domain lens. Structured findings.
    For visual products, ADD the aesthetic lens + screenshot-judge loop from section G below.
-3d Adversarial verify (sonnet · pipelined): each finding to an independent skeptic told to REFUTE;
+3d Adversarial verify (pipelined): each finding to an independent skeptic told to REFUTE;
    default real=false; survives only if it quotes the failing path.
-3e Per-file fix (sonnet): dedup, group by file, ONE fixer per file.
-3f Gate (sonnet): run static-analysis + build; fix until all pass; may edit any file EXCEPT the
+3e Per-file fix: dedup, group by file, ONE fixer per file.
+3f Gate: run static-analysis + build; fix until all pass; may edit any file EXCEPT the
    immutable contract files.
 
 ## Step 4 — Verify by running it
@@ -134,7 +139,7 @@ STORYTELLING details (banners, barrels, sacks, fences, chimneys, wear). Describe
 each one by name. This is the single biggest lever — write it like a model sheet.
 
 ### D. Visuals are a DEDICATED multi-agent workstream (not one renderer agent)
-Split rendering across parallel sonnet "art department" agents, minimum:
+Split rendering across parallel "art department" agents, minimum:
   1. Environment / world  — terrain with biome vertex-tinting, water, skybox.
   2. Structures           — buildings, with construction/animated parts.
   3. Characters/creatures — rigged, with idle/walk/work/attack animation funcs.
@@ -160,7 +165,7 @@ hundreds of props). The world must look lived-in before the player does anything
 Correctness review does NOT improve looks. Add an AESTHETIC pass that judges OUTPUT:
 - Step 4 verification MUST capture canvas screenshots at ≥3 camera angles AND ≥2
   times of day, plus one close-up of a hero asset.
-- Feed each screenshot to a sonnet "art-director judge" that scores against the
+- Feed each screenshot to an "art-director judge" subagent that scores against the
   style bible on: composition, color cohesion, world density, lighting/mood,
   silhouette readability, and "empty/flat/programmer-art" smells. Structured output
   with a 1–10 per axis + concrete, file-targeted fixes.

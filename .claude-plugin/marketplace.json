@@ -67,7 +67,7 @@
     {
       "name": "single-shot-game-generation",
       "source": "./plugins/single-shot-game-generation",
-      "description": "Generate a complete, playable, visually beautiful game in one orchestrated multi-agent workflow. The orchestrator writes an immutable contract + an art-direction style bible, fans the build out across parallel sonnet implementers (with dedicated world/structure/character/fx/lighting art agents), runs a review → adversarial-verify → fix gauntlet, then actually runs the game, captures screenshots, and iterates against an art-director judge until it looks great. Stack-agnostic; browser/canvas games are the sweet spot. Composes the contract-first method with front-loaded art direction and a closed screenshot-judge feedback loop.",
+      "description": "Generate a complete, playable, visually beautiful game in one orchestrated multi-agent workflow. The orchestrator writes an immutable contract + an art-direction style bible, fans the build out across parallel implementers (with dedicated world/structure/character/fx/lighting art agents), runs a review → adversarial-verify → fix gauntlet, then actually runs the game, captures screenshots, and iterates against an art-director judge until it looks great. Stack-agnostic; browser/canvas games are the sweet spot. Composes the contract-first method with front-loaded art direction and a closed screenshot-judge feedback loop.",
       "version": "1.0.0",
       "category": "workflow",
       "tags": ["game", "game-generation", "single-shot", "contract-first", "multi-agent", "workflow", "three.js", "art-direction", "visual", "screenshot-judge", "low-poly", "verified-build"]

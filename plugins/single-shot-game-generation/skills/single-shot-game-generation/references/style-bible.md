@@ -2,7 +2,7 @@
 
 The style bible is a one-page art-direction document you (the orchestrator) write during Phase 2 and
 embed **verbatim** in every visual implementer prompt. It is the single biggest lever on how the game
-looks. Five independent sonnet art agents will read it instead of each other's code; it is the only
+looks. Five independent art agents will read it instead of each other's code; it is the only
 thing making their output cohere into one art-directed game.
 
 This guide has three parts: the **style bible template**, the **per-asset model-sheet spec** (the

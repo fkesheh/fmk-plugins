@@ -53,6 +53,13 @@ const SHOTS = [
 const VISUAL_BAR = 8       // each rubric axis must reach this
 const MAX_JUDGE_ROUNDS = 3 // bound the screenshot-judge loop
 
+// >>> SLOT: models — choose per the skill's model policy. Do NOT hardcode a brand/version: pick the
+// most cost-efficient model that does each step well, and ASK THE USER which tiers to use if unsure.
+// This build fans out to dozens of calls, so model choice dominates cost.
+const M_BUILD = 'REPLACE_WITH_A_COST_EFFICIENT_CODING_MODEL' // implementers, reviewers, verifiers, fixers, judges, gate, run
+const M_MECH  = 'REPLACE_WITH_THE_CHEAPEST_FAST_MODEL'       // mechanical structured-output steps (parse checker output to JSON)
+// (The orchestrator — i.e. whoever runs this Workflow — uses its own strong reasoning model.)
+
 // >>> SLOT: rules prepended to every agent -----------------------------------
 const RULES = [
   '# Project rules (apply to every file you write)',
@@ -90,7 +97,7 @@ const MODULES = [
 ]
 
 // =============================================================================
-//  PHASE 1 — Implement (parallel · sonnet)
+//  PHASE 1 — Implement (parallel)
 // =============================================================================
 phase('Implement')
 log('Spawning ' + MODULES.length + ' module implementers in parallel (incl. ' +
@@ -100,12 +107,12 @@ const implResults = await parallel(MODULES.map((m) => () => agent(
   m.files.map((f) => '- ' + ROOT + '/' + f).join('\n') +
   '\n\nModule guidance: ' + m.spec +
   '\n\nRe-read every file you wrote end-to-end before finishing; fix anything incomplete. Return a terse summary (data for the orchestrator, not prose).',
-  { label: 'impl:' + m.key, phase: 'Implement', model: 'sonnet' }
+  { label: 'impl:' + m.key, phase: 'Implement', model: M_BUILD }
 )))
 log('Implementers done: ' + implResults.filter(Boolean).length + '/' + MODULES.length)
 
 // =============================================================================
-//  PHASE 2 — Compile-fix loop (haiku reporter + sonnet per-file fixers)
+//  PHASE 2 — Compile-fix loop (mechanical reporter + per-file fixers)
 // =============================================================================
 phase('Compile')
 const TSC_SCHEMA = {
@@ -123,7 +130,7 @@ for (let round = 1; round <= 6 && !compileClean; round++) {
     'In ' + ROOT + ' run: ' + TYPECHECK + ' 2>&1 | head -300\n' +
     'Report as structured output: group every error under its source file (repo-relative). Each error = "line:col code message". ' +
     'If zero errors, clean=true with empty errorsByFile. Do NOT edit files.',
-    { label: 'tsc:round' + round, phase: 'Compile', schema: TSC_SCHEMA, model: 'haiku' }
+    { label: 'tsc:round' + round, phase: 'Compile', schema: TSC_SCHEMA, model: M_MECH }
   )
   if (!check) break
   if (check.clean) { compileClean = true; log('Typecheck clean on round ' + round); break }
@@ -136,7 +143,7 @@ for (let round = 1; round <= 6 && !compileClean; round++) {
     'Fix ALL of these tsc errors. EDIT ONLY these files:\n' +
     g.map((e) => '## ' + e.file + '\n' + e.errors.map((er) => '- ' + er).join('\n')).join('\n') + '\n\n' +
     'CARVE-OUT: if an error is a missing/misnamed export in ANOTHER file (TS2305/2307/2724), make the minimal contract-conformant add/rename there — never a wholesale rewrite. Confirm YOUR files are clean afterward. Return a terse changelog.',
-    { label: 'fix:r' + round + 'g' + gi, phase: 'Compile', model: 'sonnet' }
+    { label: 'fix:r' + round + 'g' + gi, phase: 'Compile', model: M_BUILD }
   )))
 }
 
@@ -167,7 +174,7 @@ const verifiedByLens = await pipeline(
   (lens) => agent(
     'Repo: ' + ROOT + ' — a game just assembled from parallel modules; it typechecks but has NOT run. Hunt INTEGRATION/RUNTIME bugs. ' + lens.prompt +
     '\n\nReport <=12 findings: exact repo-relative file, line if known, the issue quoting the offending code, a suggested fix, severity (critical=breaks boot; major=a feature does not work; minor=polish). Only what you can EVIDENCE by quoting code.',
-    { label: 'review:' + lens.key, phase: 'Review', schema: FINDINGS_SCHEMA, model: 'sonnet' }
+    { label: 'review:' + lens.key, phase: 'Review', schema: FINDINGS_SCHEMA, model: M_BUILD }
   ),
   (rev, lens) => {
     if (!rev) return []
@@ -176,7 +183,7 @@ const verifiedByLens = await pipeline(
     return parallel(serious.map((f) => () => agent(
       'Repo: ' + ROOT + '. A reviewer claims this bug:\nFILE: ' + f.file + (f.line ? ' line ~' + f.line : '') + '\nISSUE: ' + f.issue + '\nSUGGESTED FIX: ' + (f.fix || 'n/a') +
       '\n\nAdversarially verify by reading the file + everything it touches. REAL only if you can quote the exact failing path. Default real=false when uncertain or already handled.',
-      { label: 'verify:' + lens.key + ':' + f.file.split('/').pop(), phase: 'Verify', schema: VERDICT_SCHEMA, model: 'sonnet' }
+      { label: 'verify:' + lens.key + ':' + f.file.split('/').pop(), phase: 'Verify', schema: VERDICT_SCHEMA, model: M_BUILD }
     ).then((v) => (v && v.real ? { ...f, verifiedReason: v.reason } : null))))
   }
 )
@@ -198,7 +205,7 @@ await parallel(Array.from(fileGroups.entries()).map(([file, fs]) => () => agent(
   'Repo: ' + ROOT + '. Fix these VERIFIED bugs. Primary target: ' + file + ' (minimal coordinated edits in directly-related files only if unavoidable; conform to the contract). Never edit the immutable contract files.\n\n' +
   fs.map((f, i) => (i + 1) + '. ' + (f.line ? '(line ~' + f.line + ') ' : '') + f.issue + '\n   Fix: ' + (f.fix || 'use judgment') + '\n   Evidence: ' + f.verifiedReason).join('\n') +
   '\n\nAfter editing, ' + TYPECHECK + ' must introduce no new errors. Return a terse changelog.',
-  { label: 'apply:' + file.split('/').pop(), phase: 'Fix', model: 'sonnet' }
+  { label: 'apply:' + file.split('/').pop(), phase: 'Fix', model: M_BUILD }
 )))
 
 // =============================================================================
@@ -209,7 +216,7 @@ const GATE_SCHEMA = { type: 'object', required: ['clean', 'notes'],
   properties: { clean: { type: 'boolean' }, notes: { type: 'string' } } }
 const gate = await agent(
   'Repo: ' + ROOT + '. Final build gate. Run: ' + TYPECHECK + ' && ' + BUILD + '. If either fails, fix the errors (any file EXCEPT the immutable contract files) and rerun, up to 4 attempts. clean=true only when BOTH pass. notes = warnings/bundle size/anything suspicious.',
-  { label: 'final-gate', phase: 'Gate', schema: GATE_SCHEMA, model: 'sonnet' }
+  { label: 'final-gate', phase: 'Gate', schema: GATE_SCHEMA, model: M_BUILD }
 )
 log('Gate: ' + (gate && gate.clean ? 'PASS' : 'see notes — ' + (gate && gate.notes)))
 
@@ -222,7 +229,7 @@ const RUN_SCHEMA = { type: 'object', required: ['ran', 'flowAsserted', 'errors',
     errors: { type: 'array', items: { type: 'string' } }, notes: { type: 'string' } } }
 const run = await agent(
   RUN_AND_ASSERT + '\nReturn structured output. If it crashes or the flow does not change state, ran/flowAsserted=false with the errors. Fix only if the fix is small and obvious; otherwise report.',
-  { label: 'run-assert', phase: 'Run', schema: RUN_SCHEMA, model: 'sonnet' }
+  { label: 'run-assert', phase: 'Run', schema: RUN_SCHEMA, model: M_BUILD }
 )
 log('Run: ran=' + (run && run.ran) + ' flow=' + (run && run.flowAsserted) + ' errors=' + ((run && run.errors.length) || 0))
 
@@ -251,7 +258,7 @@ for (let round = 1; round <= MAX_JUDGE_ROUNDS && !visualPass; round++) {
     'and save these screenshots (create dirs as needed):\n' +
     SHOTS.map((s) => '- ' + s.path + ' — ' + s.how).join('\n') +
     '\nReturn the list of files written.',
-    { label: 'shots:r' + round, phase: 'Judge', model: 'sonnet' }
+    { label: 'shots:r' + round, phase: 'Judge', model: M_BUILD }
   )
   // 7b. judge each shot in parallel against the style bible (judge READS the PNG)
   const judged = await parallel(SHOTS.map((s) => () => agent(
@@ -259,7 +266,7 @@ for (let round = 1; round <= MAX_JUDGE_ROUNDS && !visualPass; round++) {
     '(composition, color cohesion, world density, lighting/mood, silhouette/detail, cleanliness=absence of programmer-art smells) ' +
     'against this STYLE BIBLE:\n\n' + CONTRACT + '\n\n' +
     'Return file-TARGETED findings only (which module to edit + the concrete change). Vague fixes are useless. severity major|minor.',
-    { label: 'judge:' + s.key + ':r' + round, phase: 'Judge', schema: JUDGE_SCHEMA, model: 'sonnet' }
+    { label: 'judge:' + s.key + ':r' + round, phase: 'Judge', schema: JUDGE_SCHEMA, model: M_BUILD }
   )))
   const shots = judged.filter(Boolean)
   const minAxis = Math.min(...shots.flatMap((j) => Object.values(j.scores)))
@@ -270,7 +277,7 @@ for (let round = 1; round <= MAX_JUDGE_ROUNDS && !visualPass; round++) {
   const verified = (await parallel(majors.map((f) => () => agent(
     'Re-read the screenshot ' + ROOT + '/' + f.file + ' context and the code. Is this art-direction finding REAL and worth a fix?\nISSUE: ' + f.issue + '\nFIX: ' + f.fix +
     '\nDefault real=false if it is taste-only or already acceptable.',
-    { label: 'vjudge:r' + round + ':' + (f.file.split('/').pop() || 'x'), phase: 'Judge', schema: VERDICT_SCHEMA, model: 'sonnet' }
+    { label: 'vjudge:r' + round + ':' + (f.file.split('/').pop() || 'x'), phase: 'Judge', schema: VERDICT_SCHEMA, model: M_BUILD }
   ).then((v) => (v && v.real ? f : null))))).filter(Boolean)
   const byFile = new Map()
   for (const f of verified) { (byFile.get(f.file) || byFile.set(f.file, []).get(f.file)).push(f) }
@@ -278,7 +285,7 @@ for (let round = 1; round <= MAX_JUDGE_ROUNDS && !visualPass; round++) {
     'Repo: ' + ROOT + '. Apply these ART-DIRECTION fixes. Primary target: ' + file + '. Never edit the immutable contract files (palette/primitives stay frozen — change USAGE, not the palette).\n\n' +
     fs.map((f, i) => (i + 1) + '. [' + f.axis + '] ' + f.issue + '\n   Fix: ' + f.fix).join('\n') +
     '\n\nAfter editing, ' + TYPECHECK + ' must stay clean. Return a terse changelog.',
-    { label: 'artfix:r' + round + ':' + (file.split('/').pop() || 'x'), phase: 'Judge', model: 'sonnet' }
+    { label: 'artfix:r' + round + ':' + (file.split('/').pop() || 'x'), phase: 'Judge', model: M_BUILD }
   )))
 }
 log('Visual judge: ' + (visualPass ? 'PASS (bar ' + VISUAL_BAR + ')' : 'bound reached — see logs for remaining gaps'))

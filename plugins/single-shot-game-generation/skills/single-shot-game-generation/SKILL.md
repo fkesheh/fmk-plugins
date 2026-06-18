@@ -6,7 +6,7 @@ description: >-
   "make a 3D/2D/browser game", "generate a complete game", "single-shot a game", "vibe-code a game",
   or describes a game concept to turn into working software, especially when visual polish matters.
   The orchestrator writes an immutable contract plus a one-page art-direction style bible, fans the
-  build across parallel sonnet implementers (dedicated world/structure/character/fx/lighting/audio
+  build across parallel implementers (dedicated world/structure/character/fx/lighting/audio
   art agents), runs a review/verify/fix gauntlet, then runs the game, captures screenshots, and
   iterates against an art-director judge until it looks great. Trigger even if the user never says
   "contract", "workflow", or "agents". Do NOT use for small edits to an existing game, a single
@@ -26,7 +26,7 @@ ever looked at the output.
 This skill cures both. It is the full pipeline: write one **immutable contract** so a fan-out can run
 blind and parallel (the structural cure), AND author the **art direction up front** plus close the
 loop with a **screenshot → art-director-judge → fix** cycle (the aesthetic cure). You are the
-architect and art director; sonnet agents are the crew.
+architect and art director; the subagents are the crew.
 
 **The key insight, learned the hard way:** in a multi-agent game build, *the same model produces
 beautiful or generic visuals depending almost entirely on the prompt, not its capability.* The magic
@@ -42,12 +42,28 @@ off). Here you run the whole thing.
 
 - **You** plan, write the contract, write the style bible, and integrate. You do **not** hand-write
   module bodies.
-- **All** implementation, review, fixing, and judging is done by subagents pinned to **`sonnet`**
-  (and **`haiku`** for cheap mechanical parsing of tool output to JSON). Never `opus` for module
-  work; never yourself.
+- **All** implementation, review, fixing, and judging is done by subagents — never by you directly.
 - One orchestrated Workflow. Implementers never make design decisions — they fill bodies against a
   frozen contract.
-- Set the model explicitly on **every** subagent call.
+
+### Model policy — match the model to the task; prefer the cheaper option; don't hardcode
+
+A multi-agent build fans out to dozens of calls, so model choice dominates cost. Don't pin a specific
+model by name (model lineups and prices change). Instead choose **per task complexity**, set the model
+explicitly on **every** subagent call, and **default to the most cost-efficient model that can do the
+step well** — escalate to a stronger model only where the work is genuinely hard:
+
+- **Orchestrator (you):** a strong reasoning model — you're doing the planning, contract, and art
+  direction.
+- **Implementers / reviewers / verifiers / per-file fixers / judges:** a solid mid-tier coding model
+  is usually enough; reserve a stronger tier for the hardest review/verify steps and drop to a cheaper
+  one where a step is simple.
+- **Mechanical structured-output steps** (parsing tool output to JSON): the cheapest fast model that
+  reliably returns valid JSON.
+
+If you don't know which models are available or how to weigh cost vs. quality for this run, **ask the
+user which tiers to use** rather than guessing — a quick question here can save a large bill. When the
+user has expressed a preference (or a budget), follow it.
 
 ## Process
 
@@ -148,7 +164,7 @@ Validate the decomposition with **`scripts/check_plan.py`** (disjoint + total, i
 contract files separate) before running. Then adapt **`references/build-workflow.template.js`** and
 run it via the **Workflow** tool. Re-assert contract immutability in every phase. The shape:
 
-- **3a. Implement (parallel · sonnet)** — N disjoint modules, no two agents share a file. Prompt =
+- **3a. Implement (parallel)** — N disjoint modules, no two agents share a file. Prompt =
   RULES + CONTRACT + sealed file list + brief. **Visuals are a dedicated multi-agent workstream**,
   not one renderer agent — minimum five art roles: *world/environment* (terrain, water, sky),
   *structures*, *characters/creatures* (with idle/walk/work/attack animation), *fx/particles*, and
@@ -156,18 +172,18 @@ run it via the **Workflow** tool. Re-assert contract immutability in every phase
   agent is the single biggest cause of generic-looking output. Give **audio & game-feel** its own role
   too (synthesized/asset SFX + ambience + the juice layer: screen shake, hit reactions, event
   particles) — feel is as much a workstream as visuals, and the screenshot judge can't see its absence.
-- **3b. Static-fix loop (haiku reporter + sonnet per-file fixers · bounded)** — structured errors
-  grouped by file. Carve-out: a minimal contract-conformant symbol add/rename in a neighbor's file
+- **3b. Static-fix loop (bounded)** — a cheap mechanical-tier agent parses the checker output into
+  structured errors grouped by file; per-file fixers repair them. Carve-out: a minimal contract-conformant symbol add/rename in a neighbor's file
   only for a missing/misnamed-symbol or broken-import error — never a wholesale rewrite.
-- **3c. Multi-lens review (~5 lenses · sonnet)** — pick correctness/integration, state & data-flow,
+- **3c. Multi-lens review (~5 lenses)** — pick correctness/integration, state & data-flow,
   edge-cases, interface wiring + any domain lens, **and always include the AESTHETIC lens** (does
   every entity attach a visible mesh; bake helper used; colors trace to the palette; shadows/animate
   hooks wired; no per-frame allocation in hot paths). Note: this static aesthetic lens catches visual
   *bugs* but cannot judge *beauty* — that's Phase 4's job.
-- **3d. Adversarial verify (sonnet · pipelined)** — each finding to an independent skeptic told to
+- **3d. Adversarial verify (pipelined)** — each finding to an independent skeptic told to
   REFUTE; default real=false; survives only if it quotes the failing path.
-- **3e. Per-file fix (sonnet)** — dedup, group by file, one fixer per file.
-- **3f. Gate (sonnet)** — run static-analysis + build; fix until both pass; may edit any file except
+- **3e. Per-file fix** — dedup, group by file, one fixer per file.
+- **3f. Gate** — run static-analysis + build; fix until both pass; may edit any file except
   the immutable contract files.
 
 ### Phase 4 — Run it, then JUDGE what it looks like  ★ the upgrade that makes it beautiful
@@ -179,7 +195,7 @@ Static green ≠ works, and works ≠ beautiful. Close both loops:
   exercise the **feedback/juice hooks** (assert an SFX/event/particle actually fires on a core action)
   — feel can't be screenshotted, so the run phase is where its presence is verified.
 - **Aesthetic judge loop:** capture screenshots at **≥3 camera angles and ≥2 times of day**, plus one
-  close-up of a hero asset. Feed each to a **sonnet "art-director judge"** that scores against the
+  close-up of a hero asset. Feed each to an **"art-director judge"** subagent that scores against the
   style bible on the rubric in **`references/visual-judge-rubric.md`** (composition, color cohesion,
   world density, lighting/mood, silhouette readability, programmer-art smells) — structured output,
   1–10 per axis + concrete, file-targeted fixes. Adversarially verify findings, run the per-file fix
