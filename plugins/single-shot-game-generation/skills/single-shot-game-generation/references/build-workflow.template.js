@@ -23,6 +23,7 @@ export const meta = {
   name: 'single-shot-game-build',
   description: 'Build a complete, visually beautiful game: parallel implementers (incl. art agents), compile-fix loop, multi-lens + aesthetic review, adversarial verify, fix, gate, run, and a screenshot/art-director-judge loop.',
   phases: [
+    { title: 'Gauntlet', detail: 'pre-freeze adversarial contract review (blocks fan-out on fatal/major)' },
     { title: 'Implement', detail: 'parallel module agents incl. dedicated art roles' },
     { title: 'Compile', detail: 'typecheck reporter + per-file fixers (bounded)' },
     { title: 'Review', detail: 'multi-lens incl. aesthetic, integration review' },
@@ -60,6 +61,10 @@ const MAX_JUDGE_ROUNDS = 3 // bound the screenshot-judge loop
 // single cost-effective coding model on Cursor). The orchestrator (whoever runs this) uses its own model.
 const M_BUILD = 'sonnet' // implementers, reviewers, verifiers, fixers, judges, gate, run (mid-tier coding)
 const M_MECH  = 'haiku'  // mechanical structured-output steps (parse checker output to JSON) — cheap+fast
+const M_STRONG = 'opus'  // judgment-heavy gates: aesthetic lens, adversarial verify, integrator, art-director judge, AND the pre-freeze contract gauntlet
+
+// >>> SLOT: prep artifacts the gauntlet reviews (repo-relative; adapt to your layout)
+const PREP_PATHS = 'the frozen contract files (e.g. src/contract/*.ts — types, config, primitives/visual), the style bible, plan.json, and the verify/ run + screenshot scripts'
 
 // >>> SLOT: rules prepended to every agent -----------------------------------
 const RULES = [
@@ -96,6 +101,50 @@ const MODULES = [
   { key: 'ui',   files: ['>>> ui files <<<'],            spec: 'Cohesive themed HUD per the style bible; readable over the 3D scene.' },
   { key: 'game', files: ['>>> game.ts + main entry <<<'],spec: 'Integrator: assemble the context, the loop, the removal pass; the only place broad concrete imports are allowed.' },
 ]
+
+// =============================================================================
+//  PHASE 0 — Contract gauntlet (pre-freeze adversarial review; BLOCKS the fan-out)
+// =============================================================================
+// The contract is about to be frozen; a flaw here is inherited by every implementer and can't be
+// fixed during the build. An independent strong-tier panel refutes "this prep is sound"; any
+// fatal/major finding aborts the run so the orchestrator fixes the contract and re-runs. See
+// references/contract-gauntlet.md.
+phase('Gauntlet')
+const GAUNTLET_SCHEMA = {
+  type: 'object', required: ['findings', 'verdict'],
+  properties: {
+    findings: { type: 'array', items: {
+      type: 'object', required: ['lens', 'severity', 'file', 'issue', 'fix'],
+      properties: {
+        lens: { type: 'string', enum: ['coherence', 'totality', 'consistency', 'buildability', 'gate'] },
+        severity: { type: 'string', enum: ['fatal', 'major', 'minor'] },
+        file: { type: 'string' }, issue: { type: 'string' }, fix: { type: 'string' },
+      } } },
+    verdict: { type: 'string', enum: ['FREEZE', 'FIX-FIRST', 'REJECT'] },
+  },
+}
+const GAUNTLET_PANEL = 3
+const gauntlet = (await parallel(Array.from({ length: GAUNTLET_PANEL }, (_, i) => () => agent(
+  'You are an adversarial PRE-FREEZE reviewer (#' + (i + 1) + '). The contract for the project at ' + ROOT +
+  ' is about to be frozen IMMUTABLE and fanned out to ' + MODULES.length + ' parallel implementers — the last ' +
+  'chance to fix it, since a flaw frozen in is inherited by every agent. The build has NOT happened; review ONLY ' +
+  'the prep: ' + PREP_PATHS + '. Do NOT read built module code.\n\n' +
+  'Refute "this prep is sound and ready to freeze" across five lenses: (1) CONTRACT COHERENCE — missing signatures, ' +
+  'untyped holes, an incomplete shared context handle, untyped events; (2) DECOMPOSITION TOTALITY — a file owned ' +
+  'twice, or a responsibility/ASSET CATEGORY owned by NO module (factory map requires it but nobody builds it); ' +
+  '(3) DOC↔CODE SELF-CONSISTENCY — a frozen artifact contradicting another: a helper whose name/docstring disagrees ' +
+  'with its body, a style-bible mandate the frozen helpers cannot honor, opts accepted then dropped; (4) VISUAL ' +
+  'BUILDABILITY — can the frozen primitive kit + palette + material model actually produce the bible\'s mood?; ' +
+  '(5) GATE COMPLETENESS — does the workflow run+assert AND score rendered output vs the bible, or stop at ' +
+  '"compiles / ran once"? Quote evidence. Return findings (lens, severity, file, issue, fix) + verdict.',
+  { label: 'gauntlet:r' + (i + 1), phase: 'Gauntlet', schema: GAUNTLET_SCHEMA, model: M_STRONG }
+)))).filter(Boolean)
+const blockingFindings = gauntlet.flatMap((r) => r.findings).filter((f) => f.severity === 'fatal' || f.severity === 'major')
+if (blockingFindings.length > 0) {
+  log('CONTRACT GAUNTLET: ' + blockingFindings.length + ' fatal/major finding(s) — FAN-OUT BLOCKED. Fix the contract, then re-run.')
+  return { gauntlet: 'BLOCKED', verdicts: gauntlet.map((r) => r.verdict), blockingFindings }
+}
+log('Contract gauntlet passed (' + gauntlet.map((r) => r.verdict).join('/') + ') — freezing and fanning out.')
 
 // =============================================================================
 //  PHASE 1 — Implement (parallel)

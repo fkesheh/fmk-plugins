@@ -163,6 +163,27 @@ only how it looks. Before freezing, walk the idea and make sure the contract cov
 A useful check: list the verbs and feedback a player experiences in 5 minutes of play; each must
 resolve to something in the contract. Gaps here are why a technically-correct build feels hollow.
 
+### Phase 2.5 — Freeze gate: adversarially review the prep BEFORE you freeze  ★ catches the silent killers
+
+The contract is about to become **immutable**, so any flaw frozen in is inherited by every implementer
+and can never be fixed during the build. The typecheck gate proves the contract *compiles*; it cannot
+see the *judgment* failures that actually sink builds — a helper whose name lies about its body, a
+style bible whose mood the frozen kit can't produce, a decomposition that leaves an asset category
+unowned, a "gate" that scores nothing. So before the fan-out, run an **adversarial contract gauntlet**:
+spawn a **panel (≥3) of independent, strong-tier** reviewers — *not* the prep's author — each told to
+**refute** "this prep is sound and ready to freeze" across five lenses: **contract coherence**,
+**decomposition totality** (is any responsibility/asset owned by *no* module?), **doc↔code
+self-consistency** (does any frozen artifact contradict another?), **visual buildability** (can the
+frozen kit actually produce the bible's mood?), and **gate completeness** (does the workflow run+assert
+*and* score rendered output?). A `fatal`/`major` finding **blocks the fan-out**; fix the contract, then
+freeze and proceed. Lenses, the reviewer prompt, the finding schema, and an optional visual
+tracer-bullet are in **`references/contract-gauntlet.md`**.
+
+This is also the best compensation when the orchestrator was a weaker model: independent strong-tier
+reviewers catch the contradictions the author couldn't see. (Validated: run blind on a real failed
+low-model build, a 3-reviewer panel returned 3/3 REJECT and caught every known killer plus one the
+human post-mortem had missed.)
+
 ### Phase 3 — One Workflow: implement → gauntlet → gate
 
 Validate the decomposition with **`scripts/check_plan.py`** (disjoint + total, integrator named,
@@ -226,6 +247,8 @@ build → hardening.
       capability. (Walk the 5-minute verb/feedback list; each resolves to the contract.)
 - [ ] Decomposition **disjoint + total**, integrator named (verified with `check_plan.py`); visuals
       were a **dedicated multi-agent workstream** (≥5 art roles), not one renderer agent.
+- [ ] **Contract gauntlet passed before freeze** — a ≥3 independent strong-tier panel adversarially
+      reviewed the prep and no `fatal`/`major` prep finding is unresolved.
 - [ ] Game **runs**, a core gameplay flow is **asserted** through its real interface, **zero errors**.
 - [ ] **Art-director judge clears the bar on every axis**; shadows + day/night + atmosphere present;
       all colors trace to the shared palette; the world reads as populated and art-directed at
@@ -243,6 +266,10 @@ build → hardening.
 - **Core-loop-only contract** — a gorgeous world with no audio, no juice, and no progression reads as
   a tech demo, not a game. Spec the full feature surface (2e); silence and dead feedback are as
   damaging as flat lighting, and the screenshot judge can't catch them.
+- **Freezing the contract without the gauntlet** — type-clean ≠ sound. The judgment failures (a
+  name-vs-body lie, an unowned asset category, an unbuildable mood, a scoreless gate) compile fine and
+  then get inherited, unfixably, by every implementer. Run Phase 2.5 first — especially if the
+  orchestrator was a weaker model, where authoring blind spots are largest.
 - **Disabling shadows / post-processing "for test performance"** — a known regression that flattens
   the look. Keep them in the product; run the visual verification at reduced resolution instead.
 - **Mixing material models** (flat-shaded here, PBR there) or **PBR with no environment map/IBL** —
@@ -259,6 +286,9 @@ build → hardening.
 
 - **`references/style-bible.md`** — how to write the one-page art-direction style bible + per-asset
   model-sheet spec, with a worked low-poly example. Read before Phase 2b.
+- **`references/contract-gauntlet.md`** — the pre-freeze adversarial contract review: the five
+  refute-lenses, the reviewer prompt, the finding/verdict schema, the panel + fix-before-freeze
+  protocol, and an optional visual tracer-bullet. Read before Phase 2.5.
 - **`references/visual-judge-rubric.md`** — the art-director judge: screenshot protocol, the 6-axis
   scoring rubric, the JSON schema for findings, and the pass bar. Read before Phase 4.
 - **`references/build-workflow.template.js`** — a ready, stack-agnostic Workflow script (implement →
