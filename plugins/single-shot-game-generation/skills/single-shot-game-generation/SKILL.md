@@ -126,6 +126,24 @@ model sheet. Likewise specify the **world population** (densely scatter vegetati
 clusters — never an empty plane; give target densities) and the **atmosphere** (real-time shadows ON,
 day/night with mood palettes, fog matched to sky, post-processing where the stack allows).
 
+**2e. Cover the full feature surface + game feel — don't spec a tech demo.**
+
+A game that is *pretty* but *thin* still feels like a demo. The contract must enumerate the **whole
+feature surface the idea implies**, not just the core loop — and beauty includes how it *feels*, not
+only how it looks. Before freezing, walk the idea and make sure the contract covers:
+- **Audio** — synthesized or asset-based SFX tied to events (build, gather, hit, death, UI), plus
+  ambience/music. Silence reads as unfinished; this is half of "polish" and a screenshot can't catch
+  its absence, so it must be specified up front.
+- **Game feel / juice** — the feedback layer that makes actions satisfying: hit reactions, screen
+  shake, damage numbers, particle bursts on events, easing on UI, selection/hover states. Name the
+  juice in the per-asset/fx spec the same way you name silhouettes.
+- **Meta-progression & economy depth** — upgrades/tech, conversions/trades, tiers — whatever gives the
+  player decisions beyond the first loop. A lean core loop with no progression exhausts fast.
+- **UI/HUD completeness & stats** — every resource/state the player must read, plus run stats for the
+  end screen. The context handle should expose **every** cross-cutting capability the systems need.
+A useful check: list the verbs and feedback a player experiences in 5 minutes of play; each must
+resolve to something in the contract. Gaps here are why a technically-correct build feels hollow.
+
 ### Phase 3 — One Workflow: implement → gauntlet → gate
 
 Validate the decomposition with **`scripts/check_plan.py`** (disjoint + total, integrator named,
@@ -137,7 +155,9 @@ run it via the **Workflow** tool. Re-assert contract immutability in every phase
   not one renderer agent — minimum five art roles: *world/environment* (terrain, water, sky),
   *structures*, *characters/creatures* (with idle/walk/work/attack animation), *fx/particles*, and
   *scene & lighting* (camera rig, shadows, day/night, post-processing). Folding all rendering into one
-  agent is the single biggest cause of generic-looking output.
+  agent is the single biggest cause of generic-looking output. Give **audio & game-feel** its own role
+  too (synthesized/asset SFX + ambience + the juice layer: screen shake, hit reactions, event
+  particles) — feel is as much a workstream as visuals, and the screenshot judge can't see its absence.
 - **3b. Static-fix loop (haiku reporter + sonnet per-file fixers · bounded)** — structured errors
   grouped by file. Carve-out: a minimal contract-conformant symbol add/rename in a neighbor's file
   only for a missing/misnamed-symbol or broken-import error — never a wholesale rewrite.
@@ -157,7 +177,9 @@ run it via the **Workflow** tool. Re-assert contract immutability in every phase
 Static green ≠ works, and works ≠ beautiful. Close both loops:
 
 - **Gameplay:** actually run it; trigger a core flow through its real interface (headless browser /
-  debug surface) and **assert** the outcome; confirm zero console/page errors. Capture evidence.
+  debug surface) and **assert** the outcome; confirm zero console/page errors. Capture evidence. Also
+  exercise the **feedback/juice hooks** (assert an SFX/event/particle actually fires on a core action)
+  — feel can't be screenshotted, so the run phase is where its presence is verified.
 - **Aesthetic judge loop:** capture screenshots at **≥3 camera angles and ≥2 times of day**, plus one
   close-up of a hero asset. Feed each to a **sonnet "art-director judge"** that scores against the
   style bible on the rubric in **`references/visual-judge-rubric.md`** (composition, color cohesion,
@@ -180,6 +202,9 @@ build → hardening.
       config is **pure data**; shared primitives include the **visual vocabulary** (palette +
       mesh/draw factories + bake helper + RNG).
 - [ ] **Style bible** written and was embedded in every visual implementer prompt.
+- [ ] **Full feature surface covered** — audio/SFX, game-feel/juice, meta-progression/economy depth,
+      UI/HUD + run stats — not just the core loop; the context handle exposes every cross-cutting
+      capability. (Walk the 5-minute verb/feedback list; each resolves to the contract.)
 - [ ] Decomposition **disjoint + total**, integrator named (verified with `check_plan.py`); visuals
       were a **dedicated multi-agent workstream** (≥5 art roles), not one renderer agent.
 - [ ] Game **runs**, a core gameplay flow is **asserted** through its real interface, **zero errors**.
@@ -196,6 +221,9 @@ build → hardening.
   reads as one tired generalist's work. Split into ≥5 art roles.
 - **No screenshot-judge loop** — then nothing ever looks at the output and "beautiful" is left to
   luck on first generation. The loop in Phase 4 is the headline feature; don't skip it.
+- **Core-loop-only contract** — a gorgeous world with no audio, no juice, and no progression reads as
+  a tech demo, not a game. Spec the full feature surface (2e); silence and dead feedback are as
+  damaging as flat lighting, and the screenshot judge can't catch them.
 - **Disabling shadows / post-processing "for test performance"** — a known regression that flattens
   the look. Keep them in the product; run the visual verification at reduced resolution instead.
 - **Mixing material models** (flat-shaded here, PBR there) or **PBR with no environment map/IBL** —
