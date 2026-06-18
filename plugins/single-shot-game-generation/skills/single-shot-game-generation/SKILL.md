@@ -1,18 +1,16 @@
 ---
 name: single-shot-game-generation
 description: >-
-  End-to-end generator for a complete, playable, VISUALLY BEAUTIFUL game built in one orchestrated
-  multi-agent workflow. Use this whenever the user wants to build a whole game from scratch — "build
-  me a game", "make a 3D/2D/browser game", "generate a complete game", "single-shot a game",
-  "vibe-code a game", or describes a game concept they want turned into working software — ESPECIALLY
-  when visual polish matters. The orchestrator writes an immutable contract plus a one-page
-  art-direction style bible, fans the build out across parallel sonnet implementers (with dedicated
-  world / structure / character / fx / lighting art agents), runs a review → adversarial-verify → fix
-  gauntlet, then actually runs the game, captures screenshots, and iterates against an art-director
-  judge until it looks great. Trigger it even if the user never says "contract", "workflow", or
-  "agents" — if the task is a sizable from-scratch game, this is what makes it come together AND look
-  good. Do NOT use it for small edits to an existing game, a single mechanic or asset, engine/tooling
-  questions, or non-game apps.
+  End-to-end generator for a complete, playable, visually beautiful game built in one orchestrated
+  multi-agent workflow. Use whenever the user wants a whole game from scratch — "build me a game",
+  "make a 3D/2D/browser game", "generate a complete game", "single-shot a game", "vibe-code a game",
+  or describes a game concept to turn into working software, especially when visual polish matters.
+  The orchestrator writes an immutable contract plus a one-page art-direction style bible, fans the
+  build across parallel sonnet implementers (dedicated world/structure/character/fx/lighting/audio
+  art agents), runs a review/verify/fix gauntlet, then runs the game, captures screenshots, and
+  iterates against an art-director judge until it looks great. Trigger even if the user never says
+  "contract", "workflow", or "agents". Do NOT use for small edits to an existing game, a single
+  mechanic or asset, engine/tooling questions, or non-game apps.
 ---
 
 # Single-Shot Game Generation
