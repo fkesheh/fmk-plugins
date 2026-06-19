@@ -32,6 +32,7 @@ export const meta = {
     { title: 'Gate', detail: 'static-analysis + build must pass' },
     { title: 'Run', detail: 'run headless + assert a core gameplay flow' },
     { title: 'Judge', detail: 'screenshot set -> art-director judge -> fix loop' },
+    { title: 'UX', detail: 'screenshot UI + first-time-player task -> UX-director judge -> fix loop' },
   ],
 }
 
@@ -51,8 +52,18 @@ const SHOTS = [
   { key: 'overview-day', how: 'high overview of the settlement',   path: 'verify/shots/overview-day.png' },
   { key: 'dusk',         how: 'default camera at dusk/night',      path: 'verify/shots/dusk.png' },
 ]
-const VISUAL_BAR = 8       // each rubric axis must reach this
-const MAX_JUDGE_ROUNDS = 3 // bound the screenshot-judge loop
+const VISUAL_BAR = 8       // each rubric axis must reach this (art AND ux judges)
+const MAX_JUDGE_ROUNDS = 3 // bound the screenshot-judge loops
+
+// >>> SLOT: UI surfaces the UX-director judge reviews + a first-time-player task to drive
+const UX_SURFACES = [
+  { key: 'hud-play',   how: 'HUD mid-play: resources, population, threat all visible', path: 'verify/shots/ux-hud.png' },
+  { key: 'build-menu', how: 'build/tech menu open',                                    path: 'verify/shots/ux-buildmenu.png' },
+  { key: 'selection',  how: 'an entity selected, selection panel shown',               path: 'verify/shots/ux-selection.png' },
+  { key: 'onboarding', how: 'first-run / start screen',                                path: 'verify/shots/ux-onboarding.png' },
+  { key: 'endscreen',  how: 'win or lose screen',                                      path: 'verify/shots/ux-end.png' },
+]
+const UX_TASK = 'As a first-time player using ONLY the on-screen UI (drive via the debug API + synthetic clicks/keys): build a house and assign a worker, then train a soldier. Log each step, any misclick/dead-end, and action->feedback latency; report whether the task SUCCEEDED.'
 
 // Models — DEFINED CONCRETELY here because this script targets one runtime (the Claude Code Workflow
 // tool). The skill's methodology stays model-agnostic; the workflow is where you pin actual names.
@@ -74,6 +85,10 @@ const RULES = [
   '- The contract files are FINAL — never modify them; adapt your implementation to them.',
   '- Create ONLY your assigned files; other modules are written in parallel — import their documented exports and trust them.',
   '- ALL colors come from the frozen palette in the shared primitives file — never hard-code ad-hoc hex.',
+  '- PERFORMANCE: respect the perf budget — pool objects, bake/instance static geometry, NEVER allocate in per-frame hot paths (update/render loops).',
+  '- ROBUSTNESS: isolate errors so one throw cannot white-screen the game; guard for missing WebGL/features; handle window blur (clear held keys), resize, and rapid/repeat input.',
+  '- UX: anything the player must read is legible at gameplay zoom and matches the UX bible; feedback fires within the latency budget; honor the contracted empty/error/win/lose states.',
+  '- GAMEPLAY: implement systems so the wired config produces the design bible\'s intended curve; do not invent balance numbers — read them from the frozen config.',
   '- Do NOT run the dev server or build (a later phase compiles). Comments only where non-obvious.',
 ].join('\n')
 
@@ -116,7 +131,7 @@ const GAUNTLET_SCHEMA = {
     findings: { type: 'array', items: {
       type: 'object', required: ['lens', 'severity', 'file', 'issue', 'fix'],
       properties: {
-        lens: { type: 'string', enum: ['coherence', 'totality', 'consistency', 'buildability', 'gate'] },
+        lens: { type: 'string', enum: ['coherence', 'totality', 'consistency', 'buildability', 'gate', 'gameplay', 'ux', 'nonfunctional'] },
         severity: { type: 'string', enum: ['fatal', 'major', 'minor'] },
         file: { type: 'string' }, issue: { type: 'string' }, fix: { type: 'string' },
       } } },
@@ -129,14 +144,21 @@ const gauntlet = (await parallel(Array.from({ length: GAUNTLET_PANEL }, (_, i) =
   ' is about to be frozen IMMUTABLE and fanned out to ' + MODULES.length + ' parallel implementers — the last ' +
   'chance to fix it, since a flaw frozen in is inherited by every agent. The build has NOT happened; review ONLY ' +
   'the prep: ' + PREP_PATHS + '. Do NOT read built module code.\n\n' +
-  'Refute "this prep is sound and ready to freeze" across five lenses: (1) CONTRACT COHERENCE — missing signatures, ' +
+  'Refute "this prep is sound and ready to freeze" across these lenses: (1) CONTRACT COHERENCE — missing signatures, ' +
   'untyped holes, an incomplete shared context handle, untyped events; (2) DECOMPOSITION TOTALITY — a file owned ' +
   'twice, or a responsibility/ASSET CATEGORY owned by NO module (factory map requires it but nobody builds it); ' +
   '(3) DOC↔CODE SELF-CONSISTENCY — a frozen artifact contradicting another: a helper whose name/docstring disagrees ' +
   'with its body, a style-bible mandate the frozen helpers cannot honor, opts accepted then dropped; (4) VISUAL ' +
   'BUILDABILITY — can the frozen primitive kit + palette + material model actually produce the bible\'s mood?; ' +
   '(5) GATE COMPLETENESS — does the workflow run+assert AND score rendered output vs the bible, or stop at ' +
-  '"compiles / ran once"? Quote evidence. Return findings (lens, severity, file, issue, fix) + verdict.',
+  '"compiles / ran once"?; (6) GAMEPLAY COHERENCE — can the frozen config + systems produce the design bible\'s ' +
+  'intended curve, or is a dominant strategy / dead economy / unwinnable-or-trivial state baked into the numbers? ' +
+  'Is balance expressed as checkable intent, not loose numbers?; (7) UX COMPLETENESS — does the contract expose ' +
+  'everything the HUD must show, and are all states (empty/loading/error/win/lose), input modes, the feedback-latency ' +
+  'budget, onboarding, and accessible encodings specified?; (8) NON-FUNCTIONAL BUDGETS — are the performance ' +
+  '(FPS/frame-time/memory), load/bundle, and viewport/DPI budgets present AND achievable with the frozen kit, and do ' +
+  'the RULES carry the implied constraints (pool/bake, no hot-path allocation, capability-guard, blur/resize)? ' +
+  'Quote evidence. Return findings (lens, severity, file, issue, fix) + verdict.',
   { label: 'gauntlet:r' + (i + 1), phase: 'Gauntlet', schema: GAUNTLET_SCHEMA, model: M_STRONG }
 )))).filter(Boolean)
 const blockingFindings = gauntlet.flatMap((r) => r.findings).filter((f) => f.severity === 'fatal' || f.severity === 'major')
@@ -215,8 +237,14 @@ const LENSES = [
   { key: 'gameplay',  prompt: 'LENS: core gameplay loop end to end. Trace it as if playing; every step actually wired; costs paid; states entered/exited; win/lose conditions reachable.' },
   { key: 'wiring',    prompt: 'LENS: interface wiring. Every DOM id / cross-module call / constructor arg list matches; entry point imports styles; UI reaches the real ctx methods.' },
   { key: 'edge',      prompt: 'LENS: error-handling & edge cases. Empty selection, depleted node, no path, unaffordable, target destroyed mid-action — all handled without crashing.' },
-  // ALWAYS include the aesthetic (static) lens — catches visual BUGS (beauty is judged in Phase Judge):
-  { key: 'aesthetic', prompt: 'LENS: 3D visuals & performance (static). Every entity attaches a visible mesh at correct height; mesh factory names match exports; the bake/merge helper is used for static art; ALL colors come from the palette (flag any ad-hoc hex); userData.animate called for animated parts; SHADOWS configured (sun castShadow + reasonable frustum); selection rings/health bars attach+detach without leaks; particle pool recycles; no per-frame geometry/material allocation in hot paths.' },
+  // The quality bar (contract Phase 2f) is ENFORCED HERE, during the build, while fixes are cheap —
+  // not deferred to a post-build pass. These static lenses catch bugs-against-spec; only the rendered
+  // LOOK and played FEEL are left to Phase Judge/Run, and even those fix back into the implementers.
+  { key: 'aesthetic', prompt: 'LENS: 3D visuals (static). Every entity attaches a visible mesh at correct height; mesh factory names match exports; the bake/merge helper is used for static art; ALL colors come from the palette (flag any ad-hoc hex); userData.animate called for animated parts; SHADOWS configured (sun castShadow + reasonable frustum); selection rings/health bars attach+detach without leaks.' },
+  { key: 'performance', prompt: 'LENS: performance vs the budget. No per-frame allocation in update/render hot paths; object pools reused (particles, projectiles, vectors); static geometry baked/instanced not rebuilt per frame; draw-call/entity counts within budget; no listener or texture/geometry leaks (dispose on remove).' },
+  { key: 'robustness', prompt: 'LENS: robustness & capability. One thrown error cannot white-screen the game (boot + frame loop guarded); missing WebGL/feature degrades gracefully (not a blank canvas); window blur clears held keys; resize handled; rapid/repeat input safe; no uncaught promise rejections.' },
+  { key: 'ux', prompt: 'LENS: UX legibility & completeness (per the UX bible). Everything the player must read is shown and legible at gameplay zoom (contrast/size); action feedback fires within the latency budget; all contracted states exist (empty/loading/error/win/lose); onboarding/first-run wired; meaning is not encoded by color alone.' },
+  { key: 'balance', prompt: 'LENS: gameplay/balance coherence vs the design bible. Systems read balance from the frozen config (no invented numbers); the wired economy/combat/wave curve matches the design bible\'s intent (targets/relationships); flag any obvious dominant strategy, dead/stalling economy, or trivially-easy / unwinnable state.' },
 ]
 const allMinor = []
 const verifiedByLens = await pipeline(
@@ -340,6 +368,60 @@ for (let round = 1; round <= MAX_JUDGE_ROUNDS && !visualPass; round++) {
 }
 log('Visual judge: ' + (visualPass ? 'PASS (bar ' + VISUAL_BAR + ')' : 'bound reached — see logs for remaining gaps'))
 
+// =============================================================================
+//  PHASE 8 — UX-director judge -> fix  (bounded loop; sibling of the art-director judge)
+// =============================================================================
+phase('UX')
+const UX_SCHEMA = {
+  type: 'object', required: ['surface', 'scores', 'overall', 'taskSucceeded', 'findings'],
+  properties: {
+    surface: { type: 'string' },
+    scores: { type: 'object', required: ['hierarchy', 'legibility', 'affordance', 'feedback', 'stateCoverage', 'onboarding', 'accessibility', 'taskSuccess'],
+      properties: { hierarchy: { type: 'integer' }, legibility: { type: 'integer' }, affordance: { type: 'integer' }, feedback: { type: 'integer' },
+        stateCoverage: { type: 'integer' }, onboarding: { type: 'integer' }, accessibility: { type: 'integer' }, taskSuccess: { type: 'integer' } } },
+    overall: { type: 'integer' }, taskSucceeded: { type: 'boolean' },
+    findings: { type: 'array', items: { type: 'object', required: ['axis', 'issue', 'file', 'fix', 'severity'],
+      properties: { axis: { type: 'string' }, issue: { type: 'string' }, file: { type: 'string' }, fix: { type: 'string' }, severity: { type: 'string', enum: ['major', 'minor'] } } } },
+  },
+}
+let uxPass = false
+for (let round = 1; round <= MAX_JUDGE_ROUNDS && !uxPass; round++) {
+  // 8a. capture UI surfaces + run the first-time-player task
+  await agent(
+    'In ' + ROOT + ', run the game headless (Playwright). Save these UI screenshots (create dirs as needed):\n' +
+    UX_SURFACES.map((s) => '- ' + s.path + ' — ' + s.how).join('\n') +
+    '\nThen perform this task and capture a step-by-step trace: ' + UX_TASK + '\nReturn the files written + the task trace.',
+    { label: 'ux-capture:r' + round, phase: 'UX', model: M_BUILD }
+  )
+  // 8b. judge each surface against the UX bible (judge READS the PNG; weighs the task)
+  const judged = await parallel(UX_SURFACES.map((s) => () => agent(
+    'You are a demanding UX DIRECTOR. Read the screenshot at ' + ROOT + '/' + s.path + ' (surface: ' + s.how + '). For the task-success axis, weigh this task: ' + UX_TASK + '\n' +
+    'Score 1-10 on each axis (hierarchy/glanceability, legibility at zoom, affordance/discoverability, feedback/latency, state coverage, onboarding, accessibility, task success) against this UX BIBLE + CONTRACT:\n\n' + CONTRACT + '\n\n' +
+    'Return file-TARGETED findings (which UI module + the concrete change) + taskSucceeded. Vague fixes are useless. severity major|minor.',
+    { label: 'uxjudge:' + s.key + ':r' + round, phase: 'UX', schema: UX_SCHEMA, model: M_BUILD }
+  )))
+  const surfaces = judged.filter(Boolean)
+  const minAxis = Math.min(...surfaces.flatMap((j) => Object.values(j.scores)))
+  const taskOk = surfaces.some((j) => j.taskSucceeded)
+  const uxMajors = surfaces.flatMap((j) => j.findings.filter((f) => f.severity === 'major'))
+  log('UX judge round ' + round + ': min axis=' + minAxis + ', task=' + taskOk + ', ' + uxMajors.length + ' major findings')
+  if (minAxis >= VISUAL_BAR && taskOk && uxMajors.length === 0) { uxPass = true; break }
+  // 8c. adversarially verify majors, then fix per file
+  const uxVerified = (await parallel(uxMajors.map((f) => () => agent(
+    'Re-read ' + ROOT + '/' + f.file + ' and the UI. Is this UX finding REAL and worth a fix?\nISSUE: ' + f.issue + '\nFIX: ' + f.fix + '\nDefault real=false if taste-only or already acceptable.',
+    { label: 'uxv:r' + round + ':' + (f.file.split('/').pop() || 'x'), phase: 'UX', schema: VERDICT_SCHEMA, model: M_BUILD }
+  ).then((v) => (v && v.real ? f : null))))).filter(Boolean)
+  const uxByFile = new Map()
+  for (const f of uxVerified) { (uxByFile.get(f.file) || uxByFile.set(f.file, []).get(f.file)).push(f) }
+  await parallel(Array.from(uxByFile.entries()).map(([file, fs]) => () => agent(
+    'Repo: ' + ROOT + '. Apply these UX fixes. Primary target: ' + file + '. Never edit the immutable contract files — if the HUD needs a value the contract does not expose, REPORT it (that is a contract gap), do not edit the contract.\n\n' +
+    fs.map((f, i) => (i + 1) + '. [' + f.axis + '] ' + f.issue + '\n   Fix: ' + f.fix).join('\n') +
+    '\n\nAfter editing, ' + TYPECHECK + ' must stay clean. Return a terse changelog.',
+    { label: 'uxfix:r' + round + ':' + (file.split('/').pop() || 'x'), phase: 'UX', model: M_BUILD }
+  )))
+}
+log('UX judge: ' + (uxPass ? 'PASS (bar ' + VISUAL_BAR + ')' : 'bound reached — see logs for remaining gaps'))
+
 return {
   implemented: MODULES.map((m) => m.key),
   artAgents: MODULES.filter((m) => m.key.startsWith('art-')).map((m) => m.key),
@@ -348,4 +430,5 @@ return {
   gate,
   run,
   visualPass,
+  uxPass,
 }

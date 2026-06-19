@@ -163,6 +163,41 @@ only how it looks. Before freezing, walk the idea and make sure the contract cov
 A useful check: list the verbs and feedback a player experiences in 5 minutes of play; each must
 resolve to something in the contract. Gaps here are why a technically-correct build feels hollow.
 
+**2f. Bake the full quality bar in here — build quality in, don't inspect it in.**
+
+> **Principle.** Every quality property is *specified in the frozen contract/bibles, carried in every
+> implementer's brief (the RULES), and checked by the review lenses during the build and the gauntlet
+> before freeze* — never deferred to a post-build pass. A late inspection only reports that something
+> is broken once the contract is frozen and the agents are done — the most expensive moment to learn
+> it. The *only* checks that legitimately need the finished artifact are the ones you cannot specify or
+> statically review — the rendered **look** and the played **feel** — and even those feed fixes back
+> into the implementers; they are not a final gate.
+
+So, alongside the visual + feature direction above, the prep must also freeze the **direction and
+budgets** for everything else, and the **RULES** prepended to every implementer must restate the
+cross-cutting ones so each agent builds to them:
+
+- **Design / balance intent** (a one-page design bible): the design pillars, the core loop, the
+  decision the player makes each minute, the intended difficulty curve & session shape, and **balance
+  as relationships/targets** (e.g. "wood-positive by 60s; first soldier ~3 min; a maxed base survives
+  wave 8 but loses by ~11 if it neglects economy"), so the config numbers are *checkable against intent*.
+- **UX direction** (a one-page UX bible — distinct from the visual style bible; comprehension & control,
+  not mood): information hierarchy + always-visible glanceables; a readability budget (min contrast/size
+  at gameplay zoom); a feedback-latency budget (action → on-screen response); required states
+  (empty/loading/error/win/lose); a first-60-seconds onboarding spec; accessibility (never encode
+  meaning in color alone — your art system *is* color-coded); and target input modes (mouse/touch/controller).
+- **Performance budget** — target FPS at peak entity count, a frame-time ceiling, a memory-growth limit;
+  the implied rules (pool everything, bake static geometry, no per-frame allocation in hot paths) go in
+  the RULES.
+- **Robustness & capability** — one exception must not white-screen the game; degrade gracefully if
+  WebGL/a feature is unavailable; survive input edge cases (window blur clears held keys, resize,
+  rapid/again input). These go in the RULES.
+- **Load & viewport budget** — a bundle-size / cold-load ceiling; stable across the target aspect ratios
+  and DPI.
+
+These are *requirements implementers build to*, not a checklist for the end. The matching review lenses
+(3c) and gauntlet lenses (2.5) verify them continuously and at freeze.
+
 ### Phase 2.5 — Freeze gate: adversarially review the prep BEFORE you freeze  ★ catches the silent killers
 
 The contract is about to become **immutable**, so any flaw frozen in is inherited by every implementer
@@ -171,11 +206,16 @@ see the *judgment* failures that actually sink builds — a helper whose name li
 style bible whose mood the frozen kit can't produce, a decomposition that leaves an asset category
 unowned, a "gate" that scores nothing. So before the fan-out, run an **adversarial contract gauntlet**:
 spawn a **panel (≥3) of independent, strong-tier** reviewers — *not* the prep's author — each told to
-**refute** "this prep is sound and ready to freeze" across five lenses: **contract coherence**,
+**refute** "this prep is sound and ready to freeze" across the lenses: **contract coherence**,
 **decomposition totality** (is any responsibility/asset owned by *no* module?), **doc↔code
 self-consistency** (does any frozen artifact contradict another?), **visual buildability** (can the
-frozen kit actually produce the bible's mood?), and **gate completeness** (does the workflow run+assert
-*and* score rendered output?). A `fatal`/`major` finding **blocks the fan-out**; fix the contract, then
+frozen kit actually produce the bible's mood?), **gate completeness** (does the workflow run+assert
+*and* score rendered output?), **gameplay coherence** (can the frozen config + systems produce the
+design bible's curve, or is there a dominant strategy / dead economy / unwinnable state baked in?),
+**UX completeness** (does the contract expose everything the HUD must show; are all states + input +
+onboarding specified?), and **non-functional budgets** (are the performance / robustness / load /
+viewport / accessibility budgets present and achievable with the frozen kit?). A `fatal`/`major`
+finding **blocks the fan-out**; fix the contract, then
 freeze and proceed. Lenses, the reviewer prompt, the finding schema, and an optional visual
 tracer-bullet are in **`references/contract-gauntlet.md`**.
 
@@ -201,11 +241,18 @@ run it via the **Workflow** tool. Re-assert contract immutability in every phase
 - **3b. Static-fix loop (bounded)** — a cheap mechanical-tier agent parses the checker output into
   structured errors grouped by file; per-file fixers repair them. Carve-out: a minimal contract-conformant symbol add/rename in a neighbor's file
   only for a missing/misnamed-symbol or broken-import error — never a wholesale rewrite.
-- **3c. Multi-lens review (~5 lenses)** — pick correctness/integration, state & data-flow,
-  edge-cases, interface wiring + any domain lens, **and always include the AESTHETIC lens** (does
-  every entity attach a visible mesh; bake helper used; colors trace to the palette; shadows/animate
-  hooks wired; no per-frame allocation in hot paths). Note: this static aesthetic lens catches visual
-  *bugs* but cannot judge *beauty* — that's Phase 4's job.
+- **3c. Multi-lens review (during the build — not after)** — the lenses are where the quality bar
+  (2f) gets *enforced continuously*, while fixes are still cheap. Always run: correctness/integration,
+  state & data-flow, edge-cases, interface wiring; **aesthetic** (every entity attaches a visible mesh;
+  bake helper used; colors trace to the palette; shadows/animate hooks wired); **performance** (no
+  per-frame allocation in hot paths; pooling; bake/instance used; draw-call/entity budget respected);
+  **robustness** (errors isolated so one throw can't white-screen; WebGL/feature-capability guarded;
+  blur clears held keys, resize handled); **UX legibility** (HUD shows every contracted state, readable
+  at gameplay zoom, feedback within the latency budget, all states present, onboarding wired,
+  accessible encodings); **gameplay/balance coherence** (the wired config matches the design bible's
+  intended curve; no obvious dominant strategy / dead economy). These are *static* lenses that catch
+  *bugs against the spec*; the two things they can't judge — the rendered **look** and the played
+  **feel** — are Phase 4's job, and even those fix back into the implementers.
 - **3d. Adversarial verify (pipelined)** — each finding to an independent skeptic told to
   REFUTE; default real=false; survives only if it quotes the failing path.
 - **3e. Per-file fix** — dedup, group by file, one fixer per file.
@@ -228,6 +275,19 @@ Static green ≠ works, and works ≠ beautiful. Close both loops:
   loop, then **RE-SCREENSHOT and RE-JUDGE.** Iterate until every axis clears the bar (e.g. ≥8). This
   closed loop on the *rendered result* is what lets the build surpass, not just match, a one-shot
   generation.
+- **UX-director judge loop (interfaces) — a full-blown reviewer, exactly like the art director.** The
+  rendered interface has a property no static lens can fully verify — *is it actually usable?* So mirror
+  the art-director loop for the UI. Capture the interface states (the HUD mid-play, build/tech menus,
+  the selection panel, the first-run/onboarding screen, and the win + lose screens) **and** drive a
+  **first-time-player task** through the real interface via the debug API + synthetic input (e.g.
+  "build a house and assign a worker", "train a soldier and survive a wave"), logging whether it
+  succeeds and where it stalls. Feed the shots + the interaction trace to a **UX-director judge** that
+  scores against the UX bible on the rubric in **`references/ux-judge-rubric.md`** (information
+  hierarchy / glanceability, legibility at zoom, affordance & discoverability, feedback & latency,
+  state coverage, onboarding, accessibility, task success) — 1–10 per axis + concrete, file-targeted
+  fixes. Adversarially verify, per-file fix, then **re-capture and re-judge** to the bar. Run it in
+  parallel with the aesthetic judge; the two are siblings — one owns how it *looks*, the other how it
+  *reads and controls* — and both feed fixes back into the implementers, never a final gate.
 
 ### Phase 5 — Harden
 
@@ -241,7 +301,10 @@ build → hardening.
 - [ ] Contract is **complete** (every cross-boundary call resolves to a signature), **types-only**;
       config is **pure data**; shared primitives include the **visual vocabulary** (palette +
       mesh/draw factories + bake helper + RNG).
-- [ ] **Style bible** written and was embedded in every visual implementer prompt.
+- [ ] **Style bible, UX bible, and design/balance-intent bible** written and embedded in every
+      relevant implementer prompt; the **non-functional budgets** (perf/robustness/load/viewport/a11y)
+      are in the contract and restated in the RULES — and were enforced by the review lenses (3c) and
+      the gauntlet (2.5), not deferred to a post-build pass.
 - [ ] **Full feature surface covered** — audio/SFX, game-feel/juice, meta-progression/economy depth,
       UI/HUD + run stats — not just the core loop; the context handle exposes every cross-cutting
       capability. (Walk the 5-minute verb/feedback list; each resolves to the contract.)
@@ -289,6 +352,9 @@ build → hardening.
 - **`references/contract-gauntlet.md`** — the pre-freeze adversarial contract review: the five
   refute-lenses, the reviewer prompt, the finding/verdict schema, the panel + fix-before-freeze
   protocol, and an optional visual tracer-bullet. Read before Phase 2.5.
+- **`references/ux-judge-rubric.md`** — the UX-director judge (interface sibling of the art director):
+  capture protocol (UI states + a driven first-time-player task), the 8-axis rubric, schema, and fix
+  loop. Read before Phase 4's UX judge loop.
 - **`references/visual-judge-rubric.md`** — the art-director judge: screenshot protocol, the 6-axis
   scoring rubric, the JSON schema for findings, and the pass bar. Read before Phase 4.
 - **`references/build-workflow.template.js`** — a ready, stack-agnostic Workflow script (implement →

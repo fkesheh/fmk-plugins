@@ -40,6 +40,20 @@ something is broken and find it. The lenses, and the real failure each is tuned 
 5. **Gate completeness** — does the workflow actually **run the game and assert**, and is there an
    **aesthetic gate that scores rendered output against the style bible**? Or does it stop at "it
    compiled / it ran once / one number went up" — letting a blank or off-mood scene pass green?
+6. **Gameplay coherence** — can the **frozen config + systems actually produce the design bible's
+   intended curve**? Is balance expressed as checkable intent (targets/relationships), not just loose
+   numbers? Find the obvious dominant strategy, dead/stalling economy, or trivially-easy/unwinnable
+   state baked into the numbers before any of it is built.
+7. **UX completeness** — does the contract **expose everything the HUD must show** (every resource/
+   state the player reads), and are **all states** (empty/loading/error/win/lose), **input modes**,
+   the **feedback-latency budget**, **onboarding**, and **accessible encodings** specified — or will
+   the UI agent have to invent them?
+8. **Non-functional budgets** — are the **performance** (FPS/frame-time/memory), **load/bundle**, and
+   **viewport/DPI** budgets present *and achievable with the frozen kit*? Do the RULES carry the
+   implied constraints (pool/bake, no hot-path allocation, capability-guard, blur/resize handling)?
+
+(Lenses 1–5 are the structural/visual core; 6–8 bake the gameplay, UX, and non-functional quality bar
+into the freeze gate so it's enforced up front, not inspected after the build.)
 
 ## Reviewer prompt (adapt; spawn ≥3 independent, strong-tier)
 
@@ -49,8 +63,9 @@ something is broken and find it. The lenses, and the real failure each is tuned 
 > has NOT happened; review ONLY the prep (contract files, config, primitives, style bible, plan, the
 > workflow/verify scripts) — do NOT read built module code.
 >
-> Refute the claim "this prep is sound and ready to freeze." Apply these five lenses: [1–5 above].
-> Quote the offending lines. Report a ranked list (most build-sinking first); for each: lens, severity
+> Refute the claim "this prep is sound and ready to freeze." Apply all the lenses above (coherence,
+> totality, consistency, buildability, gate, gameplay-coherence, UX-completeness, non-functional
+> budgets). Quote the offending lines. Report a ranked list (most build-sinking first); for each: lens, severity
 > (fatal | major | minor), file + short quoted evidence, why it sinks the build if frozen as-is, and
 > the fix. Be honest if a lens finds nothing. End with a one-line verdict: FREEZE / FIX-FIRST / REJECT.
 
@@ -76,7 +91,7 @@ on-mood, it won't make forty — and you've learned it for the cost of one asset
       "type": "object",
       "required": ["lens", "severity", "file", "issue", "fix"],
       "properties": {
-        "lens": { "type": "string", "enum": ["coherence","totality","consistency","buildability","gate"] },
+        "lens": { "type": "string", "enum": ["coherence","totality","consistency","buildability","gate","gameplay","ux","nonfunctional"] },
         "severity": { "type": "string", "enum": ["fatal","major","minor"] },
         "file": { "type": "string" },
         "issue": { "type": "string" },
