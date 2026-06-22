@@ -75,10 +75,10 @@
     {
       "name": "figma",
       "source": "./plugins/figma",
-      "description": "Open and inspect Figma .fig files locally — no Figma app, account, login, or network. Decodes the proprietary fig-kiwi binary (deflate schema + Zstandard data block, which breaks most third-party tools) to JSON, extracts embedded images and design tokens, and lists/queries screens, text, and colors so a design can be read or implemented in code. Kiwi decoder is vendored, so it runs offline with no npm install.",
-      "version": "1.0.0",
+      "description": "Open, inspect, and faithfully implement Figma .fig files locally — no Figma app, account, login, or network. Decodes the proprietary fig-kiwi binary (deflate schema + Zstandard data block, which breaks most third-party tools) to JSON; lists/queries screens, text, colors, design tokens; and extracts a complete z-ordered, scale-aware render spec of a frame (fills, image crop modes, gradients, blur/shadow effects, vector paths → SVG) so a design can be read or built in code pixel-accurately instead of approximated. Kiwi decoder is vendored, so it runs offline with no npm install.",
+      "version": "1.1.0",
       "category": "design",
-      "tags": ["figma", "fig", "design", "kiwi", "zstd", "decode", "design-tokens", "offline"]
+      "tags": ["figma", "fig", "design", "kiwi", "zstd", "decode", "design-tokens", "figma-to-code", "implement", "offline"]
     }
   ]
 }
