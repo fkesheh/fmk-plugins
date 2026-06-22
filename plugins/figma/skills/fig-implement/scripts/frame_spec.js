@@ -122,6 +122,15 @@ function describe(node, depth, collapsedVector) {
 		boxPct: { top: pctH(M[5]), left: pctW(M[2]), w: pctW(w), h: pctH(h) },
 	};
 	if (sx !== 1 || sy !== 1) o.accumulatedScale = { x: r2(sx), y: r2(sy) };
+	// rotation / shear: a non-zero m01/m10 means the node is rotated (or flipped).
+	// The box above is the raw translation, NOT a rotated bounding box — surface the
+	// matrix so the implementer rotates correctly instead of treating it axis-aligned.
+	if (Math.abs(M[1]) > 1e-3 || Math.abs(M[3]) > 1e-3) {
+		o.rotationDeg = r2((Math.atan2(M[3], M[0]) * 180) / Math.PI);
+		o.flipped = M[0] * M[4] - M[1] * M[3] < 0;
+		o.transform = { m00: r2(M[0]), m01: r2(M[1]), m10: r2(M[3]), m11: r2(M[4]) };
+		o.boxNote = 'ROTATED/flipped — `box` is the translation, not a rotated bounding box. Apply `transform`/`rotationDeg`. A large off-frame rotated+blurred shape only shows a soft edge in part of the frame; figure out WHERE that edge lands.';
+	}
 	if (node.visible === false) o.hidden = true;
 	if (node.opacity != null && node.opacity < 1) o.opacity = r2(node.opacity);
 	if (node.blendMode && !['NORMAL', 'PASS_THROUGH'].includes(node.blendMode)) o.blendMode = node.blendMode;
@@ -156,12 +165,29 @@ function describe(node, depth, collapsedVector) {
 	return o;
 }
 
+// A subtree must NOT be collapsed to a flat SVG-asset pointer if it carries
+// effects (blur/shadow), rotation/flip, or stroke-only paints — those are not
+// reproducible as plain filled paths and silently lose the design (e.g. a
+// rotated, blurred, gradient-stroked glow). Keep such nodes expanded.
+function subtreeNeedsExplicitRender(g) {
+	const node = byG.get(g);
+	if (!node) return false;
+	const M = abs.get(g);
+	const rotated = M && (Math.abs(M[1]) > 1e-3 || Math.abs(M[3]) > 1e-3);
+	const hasEffects = (node.effects || []).some(e => e.visible !== false);
+	const strokeOnly = (node.strokePaints || []).some(p => p.visible !== false)
+		&& !(node.fillPaints || []).some(p => p.visible !== false);
+	if (rotated || hasEffects || strokeOnly) return true;
+	return (kids.get(g) || []).some(c => subtreeNeedsExplicitRender(key(c.guid)));
+}
+
 const out = [];
 (function walk(g, depth) {
 	for (const c of (kids.get(g) || [])) {
 		const cid = key(c.guid);
 		if (c.visible === false) continue;
-		const isVectorGroup = (kids.get(cid) || []).length > 0 && subtreeIsVectorOnly(cid);
+		const isVectorGroup = (kids.get(cid) || []).length > 0
+			&& subtreeIsVectorOnly(cid) && !subtreeNeedsExplicitRender(cid);
 		out.push(describe(c, depth, isVectorGroup));
 		if (isVectorGroup) continue; // collapse: don't dump dozens of sub-paths
 		walk(cid, depth + 1);
