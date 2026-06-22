@@ -48,7 +48,7 @@ These are exactly the details that get lost. Each is in `frame-spec.json`; use i
 - **Don't drop effect or decorative layers.** Blur glows, drop shadows, ambient gradient blobs are deliberate. Reproduce the effect even if exact blur is hard (e.g. `expo-blur`, or layered `react-native-svg` `RadialGradient`s). Skipping them flattens the design.
 - **Gradients:** read `stops` + `direction`/`gradientTransform`; map to your gradient API's start/end. `#rrggbb00` means that color fully transparent → `rgba(r,g,b,0)`.
 - **Fonts:** check what the project bundles before referencing a family. If the design's font isn't available, substitute the closest weights and say so in a comment — don't invent a font dependency.
-- **Positions:** when the frame's aspect ≈ the target device's, positioning by `% of artboard` reproduces it cleanly; otherwise use absolute px or the layout system. Don't hand-pick spacing.
+- **Positions — scale vertical by HEIGHT, horizontal by WIDTH.** Position vertical things (tops, band heights) as a fraction of the screen *height*, and horizontal sizes/fonts as a fraction of *width*. Scaling vertical by width (treating a design-y as `n × screenW / artboardW`) only fits when the device's aspect *exactly* equals the artboard's — on any shorter device the bottom overflows and the CTA/footer get clipped off-screen. Height-fraction keeps every element at its true design fraction on every device. Don't hand-pick spacing.
 - **Rotated / off-frame / blurred decorative shapes — don't reduce them to axis-aligned circles.** A glow is often a *huge* shape (e.g. 1940px) positioned mostly OUTSIDE the frame, **rotated/flipped**, with a heavy Gaussian **blur** on a gradient **stroke** (a ring), not a fill. `frame_spec.js` surfaces `rotationDeg`/`flipped`/`boxNote` and keeps such nodes expanded with their stroke gradients + blur radius — `box` is the raw translation, NOT a rotated bounding box. Work out which arc/edge of the shape actually intrudes into the frame and where its soft color lands (often the header, not where the translation suggests), then place a correspondingly soft, blurred gradient there. The visible result is usually a faint ambient tint in one region — reproduce that. Two compositing traps: (1) the soft edge frequently lands **over an opaque element** (a photo). In the design the glow sits *behind* it in z-order, but an opaque element in your build will **clip** the glow — so composite the glow **above** that element instead, with a vertical falloff that fades to transparent *before* the next fill, so it bleeds over the element without tinting (and seaming) the fill below. (2) Conversely, keep it from contaminating opaque brand fills it shouldn't touch (previous rule). The reconciliation is geometry: confine the glow to the band where its arc truly is, then choose z-order so it shows over what it should and is clipped from what it shouldn't. (Figma CSS export expresses the blur as `radius/2`.)
 - **Watch translucent / effect layers over opaque fills — this is the one a static spec can't predict.** A semi-transparent tint, gradient, or approximated blur/glow sitting above an opaque fill *shifts that fill's color*. If an opaque element (e.g. a photo) hides the same tint over an adjacent region, two areas that should be one color diverge into a visible seam. Keep brand/panel fills at their exact spec hex: scope or re-order the tint so it can't contaminate them. Approximated blur is the usual culprit — a hard `RadialGradient` tints harder than a soft Gaussian. You will not catch this by reading the spec; you catch it by measuring pixels (next step).
 
@@ -62,6 +62,31 @@ A spec-match review (z-order + hex values agree with `frame-spec.json`) can pass
   ```
   A value that should be continuous across a boundary but jumps (e.g. `#523dea` → `#5c5eed`) is a seam — trace it to the layer tinting one side, restore the exact spec hex, and re-measure until continuous. Sampling the design export the same way gives you the target hex to match.
 - Only declare done when the measured colors at the boundaries match the design.
+
+## Wiring a full-screen design into a real app
+
+A mobile screen artboard is usually **full-bleed**: the photo, gradients, and the
+status-bar / home-indicator zones are all part of it. Two things bite when you drop the
+built screen into a real app — and they only surface *after* wiring, not in the spec:
+
+- **OS chrome is not yours to draw.** Frames named like `Native / Status Bar` and
+  `Native / Home Indicator` are placeholders for the device's own chrome — iOS/Android
+  render them. Do NOT recreate them as views (a fake home-indicator pill, a status-bar
+  rectangle); leave their space and let the system draw over it. `frame_spec.js` flags
+  these as `osChrome: true`.
+- **Respect — or escape — the app's safe-area wrapper.** Many apps wrap every screen in
+  a `SafeAreaView` (or the navigator insets the card). That reserves AND *clips* the
+  status-bar / home-indicator areas, so a full-bleed screen gets a black band on top,
+  its content shoved down, and its footer clipped. You CANNOT fix this from inside the
+  screen with a negative-margin "pull-up" — an ancestor clips it (you'll burn iterations
+  discovering this). Fix it at the wrapper: render the full-bleed screen/flow *outside*
+  the SafeAreaView (e.g. only wrap the authenticated stacks), or give that route an
+  insets-less safe area, so the screen maps to the whole device. Then set the status-bar
+  glyph style to match the header — dark glyphs on a light header; the design's own
+  status-bar glyph colour (sample it) tells you which.
+- **Wire the navigation contract, not just the pixels.** Expose intent props
+  (`onPrimary`/`onSecondary`) and bind them where the screen is registered, rather than
+  hard-wiring navigation inside the screen.
 
 ## Scaling up: spec → clean-room agents
 

@@ -1,7 +1,7 @@
 {
   "name": "figma",
   "description": "Open, inspect, and faithfully implement Figma .fig files locally, with no Figma app, account, or network. `open-fig` decodes the proprietary fig-kiwi binary (deflate schema + Zstandard data block) to JSON and queries screens/text/colors/tokens; `fig-implement` extracts a complete z-ordered, scale-aware render spec of a frame (fills, image crop modes, gradients, effects, vector paths) so a screen can be built in code pixel-accurately instead of approximated.",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "author": {
     "name": "Foad Kesheh",
     "email": "foad@fmktech.com.br"

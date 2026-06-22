@@ -122,6 +122,12 @@ function describe(node, depth, collapsedVector) {
 		boxPct: { top: pctH(M[5]), left: pctW(M[2]), w: pctW(w), h: pctH(h) },
 	};
 	if (sx !== 1 || sy !== 1) o.accumulatedScale = { x: r2(sx), y: r2(sy) };
+	// OS-chrome placeholders: the device draws the status bar / home indicator —
+	// don't recreate them as views, and don't let them add real layout.
+	if (/^\s*Native\s*\/\s*(Status\s*Bar|Home\s*Indicator)/i.test(node.name || '')) {
+		o.osChrome = true;
+		o.note = 'OS chrome placeholder — the device renders this; do NOT build it as a view.';
+	}
 	// rotation / shear: a non-zero m01/m10 means the node is rotated (or flipped).
 	// The box above is the raw translation, NOT a rotated bounding box — surface the
 	// matrix so the implementer rotates correctly instead of treating it axis-aligned.
