@@ -71,6 +71,14 @@
       "version": "1.0.0",
       "category": "workflow",
       "tags": ["game", "game-generation", "single-shot", "contract-first", "multi-agent", "workflow", "three.js", "art-direction", "visual", "screenshot-judge", "low-poly", "verified-build"]
+    },
+    {
+      "name": "figma",
+      "source": "./plugins/figma",
+      "description": "Open and inspect Figma .fig files locally — no Figma app, account, login, or network. Decodes the proprietary fig-kiwi binary (deflate schema + Zstandard data block, which breaks most third-party tools) to JSON, extracts embedded images and design tokens, and lists/queries screens, text, and colors so a design can be read or implemented in code. Kiwi decoder is vendored, so it runs offline with no npm install.",
+      "version": "1.0.0",
+      "category": "design",
+      "tags": ["figma", "fig", "design", "kiwi", "zstd", "decode", "design-tokens", "offline"]
     }
   ]
 }

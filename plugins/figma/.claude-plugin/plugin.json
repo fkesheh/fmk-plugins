@@ -1,0 +1,10 @@
+{
+  "name": "figma",
+  "description": "Open and inspect Figma .fig files locally, with no Figma app, account, or network. Decodes the proprietary fig-kiwi binary (deflate schema + Zstandard data block) to JSON, extracts embedded images and design tokens, and lists/queries screens, text, and colors.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Foad Kesheh",
+    "email": "foad@fmktech.com.br"
+  },
+  "keywords": ["figma", "fig", "design", "kiwi", "zstd", "decode", "design-tokens", "offline"]
+}
