@@ -46,9 +46,18 @@ These are exactly the details that get lost. Each is in `frame-spec.json`; use i
 - **Gradients:** read `stops` + `direction`/`gradientTransform`; map to your gradient API's start/end. `#rrggbb00` means that color fully transparent → `rgba(r,g,b,0)`.
 - **Fonts:** check what the project bundles before referencing a family. If the design's font isn't available, substitute the closest weights and say so in a comment — don't invent a font dependency.
 - **Positions:** when the frame's aspect ≈ the target device's, positioning by `% of artboard` reproduces it cleanly; otherwise use absolute px or the layout system. Don't hand-pick spacing.
+- **Watch translucent / effect layers over opaque fills — this is the one a static spec can't predict.** A semi-transparent tint, gradient, or approximated blur/glow sitting above an opaque fill *shifts that fill's color*. If an opaque element (e.g. a photo) hides the same tint over an adjacent region, two areas that should be one color diverge into a visible seam. Keep brand/panel fills at their exact spec hex: scope or re-order the tint so it can't contaminate them. Approximated blur is the usual culprit — a hard `RadialGradient` tints harder than a soft Gaussian. You will not catch this by reading the spec; you catch it by measuring pixels (next step).
 
-### 5. Verify against the design, then iterate
-Render the result (run the app / screenshot, or for quick checks render an HTML mock) and **compare side-by-side with the frame image** (Figma export, or `thumbnail.png`). List the diffs and fix them against the spec — don't declare done from the code alone.
+### 5. Verify by MEASURING pixels, not just eyeballing
+A spec-match review (z-order + hex values agree with `frame-spec.json`) can pass while the *composited* result is wrong — translucent layers shift colors, approximated blurs bleed. So verify the rendered output, not the code:
+
+- **Use a FULL-frame reference.** Compare against a full-height Figma export (or `thumbnail.png`), not a partial crop — bugs hide in the regions your reference doesn't show. (A cropped reference is how a lower-panel color seam once shipped: the reviewer literally couldn't see it.)
+- **Render the build and sample pixels at every boundary** where a translucent/effect layer meets an opaque fill, or where an image fades into a fill:
+  ```bash
+  uv run --with pillow python3 "${CLAUDE_PLUGIN_ROOT}/scripts/probe_strip.py" <screenshot.png> --x 0.5 --from <topPct> --to <botPct>
+  ```
+  A value that should be continuous across a boundary but jumps (e.g. `#523dea` → `#5c5eed`) is a seam — trace it to the layer tinting one side, restore the exact spec hex, and re-measure until continuous. Sampling the design export the same way gives you the target hex to match.
+- Only declare done when the measured colors at the boundaries match the design.
 
 ## Scaling up: spec → clean-room agents
 
