@@ -41,7 +41,10 @@ These are exactly the details that get lost. Each is in `frame-spec.json`; use i
 
 - **Render in z-order.** `zOrderBottomToTop` is sorted (via each node's fractional-index `parentIndex.position`). Later = on top. Don't reorder by guesswork.
 - **Use the scaled box.** `box`/`boxPct` already include accumulated transform scale — use them, not raw `size`.
-- **Image `scaleMode` is not optional.** `STRETCH`→`resizeMode:"stretch"`, `FILL`→`cover`, `FIT`→`contain`. Defaulting everything to `cover` crops off margins and reframes the image — the single most common fidelity bug. Also apply `imageTransform` (the in-box scale/offset crop).
+- **Image fills: `scaleMode` + `transform` describe a CROP, not a stretch — and not a scale of the element.** Map carefully:
+  - `FILL` → cover (scale to cover the box). `FIT` → contain. `TILE` → repeat.
+  - `STRETCH` is Figma's **Crop** mode: the fill `transform` is a **crop rectangle in normalized image space** — show that sub-region, then scale it to fill the box. A transform `m11:0.887, m12:0.046` means "show the vertical band from 4.6% to 93.3% of the image, zoomed to fill" → the subject appears slightly **larger**, top/bottom trimmed. Do **NOT** implement it as `resizeMode:"stretch"` (distorts aspect) or as `scaleY:0.887` on the element (that *shrinks/squishes* the subject — the exact inverse of a crop). The faithful equivalent is crop-to-fill (`cover`) with the anchor/zoom set from the transform's offset and scale. Read the matrix as a window onto the image, never as a transform of the rendered box.
+  - The matrix lives on the fill's `transform` (not `imageTransform`); `frame_spec.js` already normalizes this.
 - **Don't drop effect or decorative layers.** Blur glows, drop shadows, ambient gradient blobs are deliberate. Reproduce the effect even if exact blur is hard (e.g. `expo-blur`, or layered `react-native-svg` `RadialGradient`s). Skipping them flattens the design.
 - **Gradients:** read `stops` + `direction`/`gradientTransform`; map to your gradient API's start/end. `#rrggbb00` means that color fully transparent → `rgba(r,g,b,0)`.
 - **Fonts:** check what the project bundles before referencing a family. If the design's font isn't available, substitute the closest weights and say so in a comment — don't invent a font dependency.

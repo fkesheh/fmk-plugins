@@ -107,7 +107,7 @@ function paint(p) {
 		imageTransform: p.imageTransform || p.transform || null,
 		scale: p.scale != null ? r2(p.scale) : undefined,
 		opacity: p.opacity,
-		note: 'scaleMode STRETCH->resizeMode stretch, FILL->cover, FIT->contain. Apply imageTransform (in-box scale/offset crop) — e.g. m11<1 = vertical crop, m12 = downward offset.',
+		note: 'FILL->cover, FIT->contain. STRETCH = Figma Crop mode: imageTransform is a CROP RECTANGLE (show that sub-region of the image, then scale to fill) — implement as cover + anchor/zoom from the matrix, NOT resizeMode "stretch" (distorts) and NOT scaleY on the element (squishes — the inverse). m11<1 = show that vertical fraction (zoom in), m12 = offset down.',
 	};
 	return { kind: p.type };
 }
