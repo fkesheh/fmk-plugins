@@ -1,0 +1,10 @@
+{
+  "name": "single-shot-software-build",
+  "description": "Turn a one-line product idea into a complete, running full-stack system in a single orchestrated multi-agent build. The architect expands the brief with taste, freezes a compiler-enforced contract (types + config + design system), product-directs every screen and endpoint in prose, fans implementation out across parallel disjoint-ownership agents, then hardens through a compile loop, multi-lens review, adversarial verification, and a mechanical gate.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Foad Kesheh",
+    "email": "foad@fmktech.com.br"
+  },
+  "keywords": ["single-shot", "contract-first", "orchestration", "multi-agent", "fullstack", "scaffold", "workflow", "parallel-agents", "adversarial-review"]
+}
