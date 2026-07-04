@@ -21,7 +21,8 @@ Expand the sentence into a concrete product definition:
 - **List the entities** the domain obviously needs — including the ones the user didn't say. "Expense tracker" implies accounts, categories, budgets, recurring rules, reports. Write the full noun list.
 - **List every screen** a finished version would have, including the unglamorous ones: settings, empty-state onboarding, a detail view for every list, confirmation flows.
 - **Decide the opinionated version of every ambiguity.** Multi-user or single-user? Pick one and make it good. Auth style? Pick one. Do not build configurable both-ways scaffolding — decisiveness reads as quality; hedging reads as a demo.
-- **Define "finished".** Write 5–8 sentences of what a user does in their first three minutes with the product and what they see. This paragraph becomes your north star and the smoke-test script.
+- **Define "finished".** Write 5–8 sentences of what a user does in their first three minutes with the product and what they see. This paragraph becomes your north star, the smoke-test script, and the driven task the UX judge replays in Phase 6.
+- **Walk the verb list.** List every verb and every piece of feedback a user experiences in a full first session. Later (Phase 3½) each verb must resolve to a screen AND a route AND a service method in the contract — this walk is what catches the pretty-but-hollow failure mode where the core loop can't actually complete.
 
 Scope calibration: aim for the product a strong small team would ship as a v1 — complete in its loop, polished in its core flows — not an enterprise suite. Every feature you list will be built; list what makes the loop whole, not everything imaginable.
 
@@ -58,6 +59,14 @@ This is where builds become either rich or flat, and the difference is entirely 
 
 Direction thin enough to fit in one sentence produces a product thin enough to describe in one sentence.
 
+## Phase 3½ — The freeze gate: adversarially review the prep BEFORE it becomes immutable
+
+The contract is about to be frozen, which means any flaw in it is inherited by every implementer and can never be fixed mid-build — the moment before freeze is the last chance to catch it and the cheapest place to fix it (one file, not N modules). The typechecker proves the contract *compiles*; it cannot see the judgment failures that actually sink builds: a screen the design-system primitives can't compose, an entity no module owns, a route whose response type contradicts the service it must call, an auth rule stated in prose but absent from the error semantics.
+
+So before any fan-out, run the **contract gauntlet**: a panel of ≥3 independent strong-tier reviewers, each told to *refute* the claim "this prep is sound and ready to freeze" across eight lenses (contract coherence, decomposition totality, doc↔code consistency, screen buildability, auth/security coherence, product coherence — the Phase-0 verb walk resolves fully — UX completeness, gate completeness). A `fatal`/`major` finding blocks the fan-out; fix, re-review if the change was material, then freeze. Reviewer prompt, lens definitions, finding schema, and an optional tracer-bullet (build ONE hero screen from the frozen kit and judge it before betting the whole build on the kit) are in `references/contract-gauntlet.md`.
+
+This is also your safety net as the author: you have blind spots about your own prep by construction, and independent reviewers are the only mechanism in the pipeline that checks *your* work rather than the implementers'.
+
 ## Phase 4 — Decompose into disjoint modules and fan out
 
 Cut the codebase into 6–9 file groups such that **no two agents ever touch the same file**. Every cross-module reference resolves through the frozen contract; agents import from paths they cannot see yet and trust the documented exports, because the contract guarantees they exist. A typical cut for a full-stack app:
@@ -72,7 +81,7 @@ Cut the codebase into 6–9 file groups such that **no two agents ever touch the
 
 Every implementer receives the same two preambles — a RULES block and the full CONTRACT direction — plus its own module brief. The verbatim RULES template and module-brief patterns are in `references/prompt-templates.md`; use them, they are tuned. Key rules that must survive any adaptation: contract files are FINAL and never modified; create only your assigned files; never run npm/tsc/dev servers (a later phase compiles); zero TODOs and zero stubs — this is a finished product, so handle the edge cases (empty lists, failed requests, unauthorized access, concurrent edits).
 
-No git worktrees needed: disjoint ownership plus a frozen contract makes collisions structurally impossible at the file level.
+No git worktrees needed: disjoint ownership plus a frozen contract makes collisions structurally impossible at the file level — but don't just assert disjointness, verify it mechanically. Write the decomposition as a `plan.json` and run `scripts/check_plan.py` before fanning out: it proves no file is owned by two modules, no contract file is module-owned, the integrator exists, and the contract files are actually on disk. A collision caught here costs one JSON edit; caught during the build it costs a lost write.
 
 ## Phase 5 — Run the six-phase workflow
 
@@ -87,14 +96,44 @@ Encode the build as one orchestration script and run it. If the Workflow tool is
 
 **Model tiering:** you (the architect) are the expensive model doing the 6%; implementers, reviewers, verifiers and fixers run on a mid-tier model; error-grouping and mechanical reporting run on a cheap one. More expensive everywhere is not more correct — prior head-to-heads showed a top-tier model implementing everything took 2× the time and produced a worse product than mid-tier implementers driven by a well-directed contract. The lever is the brief, not the brawn. Never route implementer roles to a top-tier/frontier model.
 
-## Phase 6 — Play your own product, then save the workflow
+## Phase 6 — Judge the rendered product in a closed loop, then save the workflow
 
-The gate proves it compiles and boots; it does not prove it's good. Walk the three-minute script from Phase 0 yourself (run the app, click through, or drive it with browser tooling if available). Judge it as a product: does the first screen orient a new user? Do the core flows feel fluid or bureaucratic? Fix what fails the walk — grouped by file, same fan-out discipline.
+The gate proves it compiles and boots; it does not prove it's good. Two properties can only be seen in the rendered result — does it *look designed*, and can a first-time user *actually use it* — so they get a closed loop, not a one-time inspection:
 
-Finally: **the most valuable artifact is not the code.** Commit the orchestration script, the contract, and the module briefs alongside the app. They are the replayable asset — the difference between lightning striking once and owning the weather.
+1. **Capture** with a small Playwright script (commit it — it doubles as the regression harness): every primary screen with seeded data, the reachable edge states (filtered-empty, validation errors, 404), a narrow viewport of the key screens, and a **driven first-time-user task** — the three-minute script from Phase 0 executed through the real UI, with a trace of where it stalled.
+2. **Judge** with two parallel judges: a product-design judge (hierarchy, token discipline, density, state craft, micro-polish, responsive integrity) and a UX judge (glanceability, affordance, feedback, state coverage, onboarding, task success). Scored 1–10 per axis against the direction you wrote in Phase 3; findings must be file-targeted.
+3. **Verify, fix, re-capture, re-judge.** Skeptic-verify the major findings, one fixer per file, then capture again and judge again. Iterate until every axis clears the bar (≥8) and the driven task succeeds, bounded at 3 rounds. Rubrics, capture protocol, schemas, and the loop protocol are in `references/judge-rubrics.md`.
+
+The judges are the last implementers, working in the only medium the others couldn't see. This loop is the difference between shipping the first generation and exceeding it. Walk the product yourself at the end — the judges raise the floor; your own three minutes in the app is still the final read.
+
+Finally: **the most valuable artifact is not the code.** Commit the orchestration script, the contract, the module briefs, and the capture baseline alongside the app. They are the replayable asset — the difference between lightning striking once and owning the weather.
+
+## Definition of done
+
+- [ ] Contract committed and frozen; `shared/` typechecks on its own; config is pure data; design-system tokens + primitives cover every screen the briefs direct.
+- [ ] Phase-0 verb walk resolves completely: every verb → a screen AND a route AND a service method.
+- [ ] **Gauntlet passed before freeze** — ≥3 independent reviewers, no unresolved `fatal`/`major`.
+- [ ] Decomposition verified disjoint + total with `check_plan.py`; integrator named.
+- [ ] Compile loop silent; all five review lenses run; findings skeptic-verified before fixing.
+- [ ] Gate green: typecheck + build + seed + boot + smoke (auth'd 200s, unauth'd 401, contract-shaped errors).
+- [ ] **Both judges clear the bar on every axis**; the driven first-time-user task succeeds through the real UI.
+- [ ] Capture script + screenshot baseline committed as the regression harness; workflow script + briefs committed alongside the app.
+
+## Anti-patterns (stop if you see these)
+
+- **"Implement the UI, make it look clean and modern" as the only frontend direction** — the textbook cause of generic output. Write the per-screen prose; thin direction cannot be compensated later.
+- **Freezing the contract without the gauntlet** — type-clean ≠ sound. The judgment flaws (unowned entity, uncomposable screen, contradictory semantics) compile fine and get inherited by the whole fleet.
+- **Skipping the judge loop** — then nothing with taste ever looks at the output, and "finished-feeling" is left to luck. The gate cannot see a blank-div empty state or a dead-end flow.
+- **Asking the user clarifying questions in Phase 0** — the one-line brief delegated taste to you; hedging with configurable both-ways scaffolding reads as a demo.
+- **Routing implementation to a top-tier model** — measured: ~2× wall-clock for a worse product. Architect strong, implementers mid-tier, reporters cheap.
+- **An endpoint without auth, an unscoped query, `any` in the contract, a file owned by two modules, logic in the config file** — the standard hazards; each one breaks a guarantee the whole pipeline leans on.
+- **Fixers "improving" beyond the confirmed finding** — minimal correct fix only; refactors during the fix phase reintroduce the collisions the decomposition prevented.
 
 ## Reference files
 
 - `references/contract-authoring.md` — read before Phase 2: contract/config/design-system specifics that make the seed enforce instead of suggest.
+- `references/contract-gauntlet.md` — read before Phase 3½: the eight refute-lenses, reviewer prompt, finding schema, and the tracer-bullet screen.
 - `references/prompt-templates.md` — read before Phase 4: verbatim RULES block, module-brief templates, reviewer and verifier prompts.
 - `references/workflow-phases.md` — read before Phase 5: the six phases in executable detail, including a Workflow-tool script skeleton and the no-Workflow fallback.
+- `references/judge-rubrics.md` — read before Phase 6: capture protocol, both judge rubrics, output schemas, and the bounded fix loop.
+- `scripts/check_plan.py` — run before fan-out: proves the decomposition is disjoint + total, contract separate, integrator named.

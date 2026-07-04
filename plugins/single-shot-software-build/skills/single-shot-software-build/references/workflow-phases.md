@@ -56,7 +56,7 @@ smoke:
 kill background server
 ```
 
-A gate failure returns to the phase that owns it (compile error → phase 2 loop; runtime 500 → read the stack trace, one targeted fixer). Then walk the product yourself — the three-minute script from Phase 0 — because the gate proves it runs, not that it's good.
+A gate failure returns to the phase that owns it (compile error → phase 2 loop; runtime 500 → read the stack trace, one targeted fixer). A green gate hands off to the judge loops (SKILL.md Phase 6, `judge-rubrics.md`) — the gate proves it runs, not that it's good.
 
 ## Workflow-tool script skeleton
 

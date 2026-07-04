@@ -75,8 +75,8 @@
     {
       "name": "single-shot-software-build",
       "source": "./plugins/single-shot-software-build",
-      "description": "Turn a one-line product idea into a complete, running full-stack system (front + back) in one orchestrated multi-agent build. The architect expands the brief with taste, freezes a compiler-enforced contract (types + config + design system), product-directs every screen and endpoint in prose, fans implementation out across parallel disjoint-ownership agents, then hardens via compile loop → multi-lens review → adversarial verification → mechanical gate. Generalization of the contract-first game method to front/back systems; model-tiered (architect on the strong model, implementers on mid-tier).",
-      "version": "1.0.0",
+      "description": "Turn a one-line product idea into a complete, running full-stack system (front + back) in one orchestrated multi-agent build. The architect expands the brief with taste, freezes a compiler-enforced contract (types + config + design system) after an adversarial pre-freeze gauntlet (≥3 refute-reviewers), product-directs every screen and endpoint in prose, fans out parallel disjoint-ownership agents (decomposition verified by check_plan.py), hardens via compile loop → multi-lens review → adversarial verification → mechanical gate, then closes the loop with Playwright-captured, scored product-design + UX judges (including a driven first-time-user task) iterating until every axis clears the bar. Generalization of the contract-first game method to front/back systems; model-tiered.",
+      "version": "1.1.0",
       "category": "workflow",
       "tags": ["single-shot", "contract-first", "fullstack", "multi-agent", "orchestration", "workflow", "parallel-agents", "adversarial-review", "design-system", "product-direction"]
     },
