@@ -1,0 +1,10 @@
+{
+  "name": "sdlc",
+  "description": "Sixteen executor discipline skills for core SDLC tasks — detailed specialist instructions for capable models (Opus-class) acting as subagents: readiness check, task decomposition, contract design, API design, feature implementation, test design, code review, security review, refactoring, performance optimization, bug fixing, hotfix/incident response, migrations, dependency upgrades, integration, and ADRs. Each skill encodes the workflow, gates, and anti-patterns of a specialist engineer.",
+  "version": "1.1.0",
+  "author": {
+    "name": "Foad Kesheh",
+    "email": "foad@fmktech.com.br"
+  },
+  "keywords": ["sdlc", "discipline", "executor", "subagent", "readiness", "bug-fix", "hotfix", "code-review", "tests", "contract", "api-design", "decomposition", "refactor", "performance", "security", "migration", "dependency", "integration", "adr"]
+}
