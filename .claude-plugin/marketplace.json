@@ -89,6 +89,14 @@
       "tags": ["figma", "fig", "design", "kiwi", "zstd", "decode", "design-tokens", "figma-to-code", "implement", "offline"]
     },
     {
+      "name": "fticket",
+      "source": "./plugins/fticket",
+      "description": "Operate fticket (FTS, the Factory Ticket System) via its fts CLI — the SQLite-backed transactional control plane for AI software factories: staged ticket pipeline with atomic claim/renew/start/complete/advance, dependencies, resource leases with FIFO waitlists, scheduler sweep, and stuck-work diagnosis (board, why, triage, doctor, events, serve).",
+      "version": "1.0.0",
+      "category": "workflow",
+      "tags": ["fticket", "fts", "tickets", "factory", "control-plane", "sqlite", "agents", "pipeline", "claims", "leases", "scheduler"]
+    },
+    {
       "name": "sdlc",
       "source": "./plugins/sdlc",
       "description": "Sixteen executor discipline skills covering the full SDLC pipeline — detailed specialist instructions for capable models (Opus-class) acting as subagents: check-readiness, decompose-task, design-contract, design-api, implement-feature, design-tests, review-code, review-security, refactor, optimize-performance, fix-bug, hotfix, plan-migration, upgrade-dependency, integrate, write-adr. Each skill encodes the workflow, hard gates, return format, and anti-patterns of a specialist engineer so an orchestrator can delegate with confidence.",

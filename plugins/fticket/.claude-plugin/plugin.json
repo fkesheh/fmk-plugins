@@ -1,0 +1,10 @@
+{
+  "name": "fticket",
+  "description": "Operate fticket (FTS, the Factory Ticket System) via its fts CLI: the SQLite-backed transactional control plane for AI software factories. Init a staged pipeline, create/claim/start/complete/advance tickets, manage dependencies and resource leases, run the scheduler sweep, and diagnose stuck work with board/why/triage/doctor/events.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Foad Kesheh",
+    "email": "foad@fmktech.com.br"
+  },
+  "keywords": ["fticket", "fts", "tickets", "factory", "control-plane", "sqlite", "agents", "pipeline", "claims", "leases"]
+}
