@@ -14,11 +14,11 @@ who is working on what, what's blocked, and what's next.
 
 - **CLI:** `fts` (also `python -m fticket`). Library: `from fticket import FTS, Mode`.
 - **Requires:** Python >= 3.13. Zero runtime dependencies (stdlib only).
-- **Run without installing:** `uvx --python 3.13 --from fticket fts ...` — the PyPI
-  package is `fticket` but the command is `fts`, so plain `uvx fticket` fails; `--from`
-  is required. Pin `--python 3.13` since that's the floor.
-- **Install:** `uv tool install fticket` (puts `fts` on PATH) or `uv pip install fticket`;
-  from a checkout, `uv sync` / `uv run fts ...`.
+- **Run without installing:** `uvx fticket ...` (>= 0.1.1 ships both `fticket` and `fts`
+  as the same CLI). Add `--python 3.13` if the default interpreter is older than the
+  floor. On 0.1.0 only `fts` exists, so use `uvx --from fticket fts ...` there.
+- **Install:** `uv tool install fticket` (puts `fts` and `fticket` on PATH) or
+  `uv pip install fticket`; from a checkout, `uv sync` / `uv run fts ...`.
 - **Database:** `--db PATH`, default `factory.db`. The flag works before or after the
   subcommand (`fts board --db f.db` is fine). Read commands open the DB read-only.
 - **No env vars.** All configuration is CLI flags plus the durable `config` table.
