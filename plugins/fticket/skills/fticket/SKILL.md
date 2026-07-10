@@ -152,6 +152,9 @@ Durable in the `config` table, live-reloaded by running processes on the next wr
 
 ## Gotchas
 
+- If `uvx fticket` errors with "not provided by package … only fts", a 0.1.0 install is
+  shadowing PyPI: uvx prefers an installed uv tool environment over resolving a new
+  version. Fix with `uv tool upgrade fticket`.
 - `claimed` is reachable only via `claim` — `transition --to claimed` is rejected.
 - `advance` must change the stage; done→queued at the same stage is illegal.
 - Stages are display/ordering metadata, not enforced routing — `advance --to-stage` can
